@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+
+<html lang="en-us" >
+<head>
+<title>Lead Generation</title>
+<link rel="stylesheet" type="text/css" href="/static/admin/css/base.css">
+<link rel="stylesheet" type="text/css" href="/static/admin/css/login.css">
+
+
+
+
+
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/admin/css/responsive.css">
+
+
+<meta name="robots" content="NONE,NOARCHIVE">
+</head>
+
+
+<body class="login" style="background-image: url(/static/images/influencer_marketing1.jpg);"
+  data-admin-utc-offset="0">
+
+<!-- Container -->
+<div id="container">
+
+
+    <!-- Header -->
+    <div id="header">
+        <div id="branding">
+
+<h1 id="site-name"><a href="/">Influencers Mgmt</a></h1>
+
+        </div>
+
+
+    </div>
+    <!-- END Header -->
+
+
+
+
+
+
+
+    <!-- Content -->
+    <div id="content" class="colM">
+
+
+
+
+
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+{% if form.errors.items|length == 1 %}{{ "Please correct the error below." }}{% else %}{{  "Please correct the errors below." }}{% endif %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content-main">
+
+<!--{% if user.is_authenticated %}-->
+<!--<p class="errornote">-->
+
+<!--    You are authenticated as {{ username }}, but are not authorized to-->
+<!--    access this page. Would you like to login to a different account?-->
+
+<!--</p>-->
+<!--{% endif %}-->
+
+
+<form action="login?next=/all_companies" method="post" id="login-form">{% csrf_token %}
+  <div class="form-row">
+
+        {{ form.username.errors }}
+    {{ form.username.label_tag }} {{ form.username }}
+  </div>
+  <div class="form-row">
+
+    {{ form.password.errors }}
+    {{ form.password.label_tag }} {{ form.password }}
+  </div>
+
+
+  <div class="submit-row">
+    <label>&nbsp;</label><input type="submit" value="Log in">
+  </div>
+</form>
+
+</div>
+
+        
+        <br class="clear">
+    </div>
+    <!-- END Content -->
+
+    <div id="footer"></div>
+</div>
+<!-- END Container -->
+
+</body>
+</html>

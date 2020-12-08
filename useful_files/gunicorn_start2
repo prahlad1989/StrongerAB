@@ -1,0 +1,38 @@
+#!/bin/bash
+# Name of the application
+NAME="LeadsMgmt1"
+# Django project directory
+DJANGODIR=/var/www/yoursite/LeadsMgmt
+# we will communicte using this unix socket
+SOCKFILE=/var/www/yoursite/LeadsMgmt/run/gunicorn.sock
+# the user to run as
+USER=centos
+# the group to run as
+GROUP=centos
+# how many worker processes should Gunicorn spawn
+NUM_WORKERS=6
+# which settings file should Django use
+DJANGO_SETTINGS_MODULE=LeadsMgmt1.settings
+# WSGI module name
+DJANGO_WSGI_MODULE=LeadsMgmt1.wsgi
+echo "Starting $NAME as `whoami`"
+# Activate the virtual environment
+cd $DJANGODIR
+source venv/bin/activate
+export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
+export PYTHONPATH=$DJANGODIR:$PYTHONPATH
+# Create the run directory if it doesn't exist
+RUNDIR=$(dirname $SOCKFILE)
+test -d $RUNDIR || mkdir -p $RUNDIR
+# Start your Django Unicorn
+# Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
+
+exec venv/bin/gunicorn  ${DJANGO_WSGI_MODULE}:application \
+--name $NAME \
+--workers $NUM_WORKERS \
+--user=$USER --group=$GROUP \
+--bind=unix:$SOCKFILE \
+--log-level=info \
+--log-file=./access.log \
+--error-logfile=./error.log \
+--access-logfile=./access.log

@@ -1,0 +1,6 @@
+#!/bin/bash
+backupDir=/var/www/yoursite/db_backups
+projectName=myproject
+user=postgres
+cd $backupDir
+exec pg_dump $projectName -U $user -f $(date -I)

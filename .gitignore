@@ -1,0 +1,7 @@
+/.idea/
+/venv/
+/access.log
+/error.log
+/1
+StrongerAB1/__pycache__/*
+/static/

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Companies</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.goog leapis.com/css?family=Open+Sans:300,600,400' rel='stylesheet' type='text/css'/>
+
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
+    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+          type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src=" http://benalman.com/code/projects/jquery-throttle-debounce/jquery.ba-throttle-debounce.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
+    <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/build/css/bootstrap-datetimepicker.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i"
+          rel="stylesheet">
+    <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css"/>
+    <link type="text/css" rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css"/>
+    <script src="/static/js/src/db.js"></script>
+    <script src="/static/js/src/jsgrid.core.js"></script>
+    <script src="/static/js/src/jsgrid.load-indicator.js"></script>
+    <script src="/static/js/src/jsgrid.load-strategies.js"></script>
+    <script src="/static/js/src/jsgrid.sort-strategies.js"></script>
+    <script src="/static/js/src/jsgrid.field.js"></script>
+    <script src="/static/js/src/jsgrid.validation.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.text.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.number.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.select.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.checkbox.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.textarea.js"></script>
+    <script src="/static/js/src/fields/jsgrid.field.control.js"></script>
+    <script src="/static/js/src/all_companies.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/jsgrid.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/theme.css"/>
+    <link rel="stylesheet" type="text/css" href="/static/css/demos.css"/>
+
+    <style>
+#header {
+    width: auto;
+    height:90px;
+    padding: 10px 40px;
+    background: #417690;
+    line-height: 40px;
+    color: white;
+    overflow: hidden;
+}
+
+.jsgrid-dnd-row {
+   background: lightsalmon;
+   border-color: lightsalmon;
+
+}
+
+.jsgrid-dnd-row > .jsgrid-cell{
+   background: lightsalmon;
+   border-color: lightsalmon;
+
+}
+        .hasDatepicker {
+            width: 100px;
+            text-align: center;
+        }
+
+        .ui-datepicker * {
+            font-family: 'Helvetica Neue Light', 'Open Sans', Helvetica;
+            font-size: 14px;
+            font-weight: 300 !important;
+        }
+
+    </style>
+
+</head>
+<body>
+
+
+<script>
+
+   var is_user_staff='{{ is_user_staff }}'=='True';
+    var portals={{ portal_choices | safe}};
+    portals = portals.map(function(x){
+        return {Name:x};
+    })
+
+</script>
+<!--<header align="right"><h2>
+<a href="change-password">Change Password</a>
+<a href="logout">Logout</a></h2>
+<br>
+</header>-->
+<div id="header">
+    <div id="branding">
+        <h1 id="site-name" align="center"><a href="/" style="color:white;">All Companies</a></h1>
+    </div>
+
+    <h2 align="right">
+        <a href="change-password" style="color:white;">Change Password</a>&nbsp;&nbsp;
+        <a href="logout" style="color:white;">Logout</a>
+
+    </h2>
+    <br>
+
+</div>
+
+<div id="jsGrid"></div>
+
+</body>
+</html>
