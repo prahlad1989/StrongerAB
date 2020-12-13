@@ -1,164 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Influencer Management</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-       <link href='http://fonts.googleapis.com/css?family=Open+Sans:300,600,400' rel='stylesheet' type='text/css' />
+   <head>
+      <!-- basic -->
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <!-- mobile metas -->
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+      <!-- site metas -->
+      <title>Influencers</title>
+      <meta name="keywords" content="">
+      <meta name="description" content="">
+      <meta name="author" content="">
+      <!-- site icons -->
+      <link rel="icon" href="static/images/fevicon/1234.png" type="image/png" />
+      <!-- bootstrap css -->
+      <link rel="stylesheet" href="static/css/bootstrap.min.css" />
+      <!-- site css -->
+      <link rel="stylesheet" href="static/css/style.css" />
+      <!-- responsive css -->
+      <link rel="stylesheet" href="static/css/responsive.css" />
+      <!-- colors css -->
+      <link rel="stylesheet" href="static/css/colors.css" />
+      <!-- wow animation css -->
+      <link rel="stylesheet" href="static/css/animate.css" />
+      <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+      <![endif]-->
+   </head>
 
-<!--    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">-->
-    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+   <body id="default_theme" class="home_page1" >
+   <script>
+       var is_user_staff='{{ is_user_staff }}'=='True';
+       var influencerFieldsDict = {{ influencerFieldsDict |safe }};
+       var list_of_countries = '{{ list_of_countries }}'
+       list_of_countries = list_of_countries.split(",").map(function(x){return {Name:x}});
+       var collections = '{{collections}}'
+       collections = collections.split(",").map(function(x){return {Name:x}});
+       var channels = '{{channels}}'
+       console.log(channels);
+       channels = channels.split(",").map(function(x){return {Name:x}});
+       console.log(channels);
+       var influencer_post_status = {{ influencer_post_status| safe }}
+       influencer_post_status = influencer_post_status.map(function(x){
+        return {Name:x};
+       });
+       var paid_unpaid_choices = {{ paid_unpaid_choices| safe }}
+       console.log(paid_unpaid_choices);
+       paid_unpaid_choices = paid_unpaid_choices.map(function(x){
+        return {Name:x};
+       });
+       console.log(paid_unpaid_choices);
+       var influencerOrProspectItems = [{Name:'',value:''},{Name: "Prospect", value: false},{Name: "Influencer", value: true}];
+       //console.log("influencer_post_status "+influencer_post_status);
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" type="text/css">
-    <link href="https://fonts.googleapis.com/css?family=Lato" rel="stylesheet" type="text/css">
-    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
-          type="text/css">
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src=" http://benalman.com/code/projects/jquery-throttle-debounce/jquery.ba-throttle-debounce.js"></script>
-    <!--<script src="https://raw.githubusercontent.com/cowboy/jquery-throttle-debounce/master/jquery.ba-throttle-debounce.min.js"></script>-->
-    <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
+       function loadGrid($grid){
+           $grid.jsGrid("option","pageIndex",1);
+           $grid.jsGrid("loadData");
+       }
+   </script>
+      <!-- header -->
+      <header class="header header_style1">
+         <div class="container">
+            <div class="row">
+               <div class="col-md-12 col-lg-12" style="max-height:160px">
+                  <div class="logo"><a href="index.html"><img src="static/images/influencer_logo.png" alt="#" /></a></div>
+                  <div class="main_menu float-right">
+                     <div class="menu">
+                        <ul class="clearfix">
+                           <li class="active"><a href="all_influencers">Influencers</a></li>
+                           <li><a href="about.html">Reports</a></li>
+                           <li><a href="service.html">Upload</a></li>
+                           <li><a href="admin" target="_blank">Admin</a></li>
+                           <li><a href="change-password">Change Pwd</a></li>
+                           <li><a href="logout">LogOut</a></li>
+                           <li><a href="pricing.html">Hi Prahlad</a></li>
+
+                        </ul>
+                     </div>
+                  </div>
+
+               </div>
+               <!--<div class="col-md-3 col-lg-2">
+                  <div class="right_bt"><div class="bt_main" href="index.html">Prahlad/LogOut</div> </div>
+               </div>-->
+            </div>
+         </div>
+      </header>
+
+
+
+
+      <!-- section -->
+      <section class="layout_padding layer_style">
+         <!--<div class="container">
+           &lt;!&ndash; <div class="row">
+               &lt;!&ndash;<div class="col-sm-12">
+                  <div class="full text_align_center">
+                     <div class="heading_main center_head_border heading_style_1">
+                        &lt;!&ndash;<h2>All <span>Companies</span></h2>&ndash;&gt;
+                     </div>
+                  </div>
+               </div>&ndash;&gt;
+            </div>&ndash;&gt;
+         </div>-->
+
+         <!--<div id="jsGrid3" ></div>-->
+         <br><br>
+         <div id="jsGridInfluencers"></div>
+
+      </section>
+      <!-- end section -->
+      <!-- section -->
+
+
+      <!-- end section -->
+      <!-- footer -->
+<!--      <footer class="footer_style_2">-->
+
+
+<!--         &lt;!&ndash; footer bottom &ndash;&gt;-->
+<!--         <div class="footer_bottom">-->
+<!--            <p>Dessigned and developed by <strong>recoil.prahlad</strong></p>-->
+<!--         </div>-->
+<!--      </footer>-->
+      <!-- end footer -->
+      <!--=========== js section ===========-->
+      <!-- jQuery (necessary for Bootstrap's JavaScript) -->
+      <script src="static/js/jquery.min.js"></script>
+      <script src="static/js/popper.min.js"></script>
+      <script src="static/js/bootstrap.min.js"></script>
+      <script src="static/js/owl.carousel.js"></script>
+      <!-- wow animation -->
+      <script src="static/js/wow.js"></script>
+
+      <!-- custom js -->
+      <script src="static/js/custom.js"></script>
+       <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+      <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
+
+      <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
     <link rel="stylesheet" type="text/css"
           href="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/build/css/bootstrap-datetimepicker.css">
-    <link href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i"
-          rel="stylesheet">
-    <!--<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>-->
-    <link type="text/css" rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css"/>
-   <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-    <script src="/static/js/src/all_companies.js"></script>
-    <link rel="stylesheet" type="text/css" href="/static/css/jsgrid.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/theme.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/demos.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/css/modalStyling.css"/>
+      <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+      <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
 
-    <style>
-#header, #subheading {
-    width: auto;
-    height: 80px;
-    padding: 10px 40px;
-    background: #417690;
-    line-height: 40px;
-    color: white;
-    overflow: hidden;
-}
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+      <script src=" http://benalman.com/code/projects/jquery-throttle-debounce/jquery.ba-throttle-debounce.js"></script>
+      <!-- google map js -->
 
-#subheading{
-     height: 40px;
-}
-
-input[type="submit"] {
-    padding-left: 5px;
-    padding-right: 5px;
-}
-
-.jsgrid-dnd-row ,.jsgrid-client-row, .jsgrid-positive-row {
-}
-
-.jsgrid-cell {
-    overflow: hidden;
-    white-space : nowrap;
-}
+      <script src="static/js/db.js"></script>
 
 
-.jsgrid-client-row > .jsgrid-cell{
-   background: #4CAF50;
-   border-color: #4CAF50;
-}
-.jsgrid-dnd-row > .jsgrid-cell{
-   background: lightsalmon;
-   border-color: lightsalmon;
-}
+      <!-- end google map js -->
+     <script>
 
-.jsgrid-positive-row > .jsgrid-cell{
-   background: rgb(66 103 178);
-   border-color: rgb(66 103 178);
-}
-
-
- .hasDatepicker {
-     width: 100px;
-     text-align: center;
- }
-
- .ui-datepicker * {
-     font-family: 'Helvetica Neue Light', 'Open Sans', Helvetica;
-     font-size: 14px;
-     font-weight: 300 !important;
- }
+      $(function() {
+            var originalFilterTemplate = jsGrid.fields.text.prototype.filterTemplate;
+                        //console.log(originalFilterTemplate);
+            jsGrid.fields.text.prototype.filterTemplate = function() {
+                        var grid = this._grid;
+                        if(!this.filtering)
+                           return originalFilterTemplate;
+                        var $result = originalFilterTemplate.call(this);
+                        $result.on("keyup", $.debounce(350, function(e){
+                           grid.search();
+                        }));
+                        return $result;
+                    }
 
 
- .jsgrid-row > .value-diff{
-    background-color:  #BDC3C7 ;;
-}
 
- .jsgrid-alt-row > .value-diff{
-    background-color:  #BDC3C7 ;;
-}
 
- .white-color{
-    color:white;
- }
-
-    </style>
-
-</head>
-<body >
-
-<script>
-    var is_user_staff='{{ is_user_staff }}'=='True';
-    var b2bFieldsDict = {{ b2bFieldsDict |safe }};
-    var portals={{ portal_choices | safe}};
-    portals = portals.map(function(x){
-        return {Name:x};
-    });
-    var response_choices = {{ response_choices |safe }};
-    response_choices = {{ response_choices | safe }};
-    response_choices = response_choices.map(function(x){
-        return {Name:x};
-    });
-
-    function loadGrid($grid){
-        $grid.jsGrid("option","pageIndex",1);
-        $grid.jsGrid("loadData");
-    }
-    $('body').bind('copy cut',function(e) {
-         e.preventDefault(); return false;
-    });
-
-function makeTextToLink(value, item){
-            return $("<a href="+value+">").text(value).click(function(e){
-                e.preventDefault();
-                if(e.ctrlKey){//activate when ctrl is pressed
-                var win =window.open(value);
-                win.focus();
-                return false;
-                }
-                return true;
-            });
-            }
-
-var originalFilterTemplate = jsGrid.fields.text.prototype.filterTemplate;
-
-jsGrid.fields.text.prototype.filterTemplate = function() {
-            var grid = this._grid;
-            if(!this.filtering)
-              return originalFilterTemplate;;
-            var $result = originalFilterTemplate.call(this);
-
-            $result.on("keyup", $.debounce(350,function(e) {
-                  grid.search();
-            }));
-            return $result;
-}
-
-$(function(){
-        console.log("allcomep");
-        function MyDateField(config) {
+            function MyDateField(config) {
             jsGrid.Field.call(this, config);
         };
 
@@ -201,730 +217,162 @@ $(function(){
                      return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
                 },
                 insertValue: function() {
-                    return this._insertPicker.datepicker("getDate").toLocaleDateString('en-GB');
+
+                    var date=this.filterControl.datepicker("getDate");
+                    if(date) return (date.getTime())/1000;
+                    return null;
                 },
                 editValue: function() {
-                    return this._editPicker.datepicker("getDate").toLocaleDateString('en-GB');
+                    var date=this._editPicker.datepicker("getDate");
+                    if(date) return (date.getTime())/1000;
+                    return null;
                 }
             });
 
             jsGrid.fields.myDateField = MyDateField;
 
-    $('#jsGrid').jsGrid({
-    width:"100%" ,
-    height:"800px",
-    inserting:true,
-    editing:true,
-    sorting:true,
-    paging:true,
-    pageSize:100,
-    autoload: true,
-    filtering:true,
-    autoSearch:true,
-    pageLoading:true,
-    pagerFormat: "Pages: {first} {prev} {pages} {next} {last} &nbsp;&nbsp; {pageIndex} of {pageCount} &nbsp;&nbsp; Records Shown: {itemCount}",
-    rowClass: function(item,itemdIndex){
-        if(item.is_dnd) return 'jsgrid-dnd-row';
-        else if(item.is_client) return 'jsgrid-client-row';
-        else if(item.response == 'Positive') return 'jsgrid-positive-row';
-        else return '';
-    },
-    controller: {
-    insertItem: function(item) {
-        console.log(item);
-        return $.ajax({
-            type: "POST",
-            url: "lead",
-            headers: {"X-CSRFToken": '{{ csrf_token }}'},
-            data: item,
-            error: function (data){
-                alert(data.responseJSON.error);
-            },
-            success: function(data){
-                var $grid=$('#jsGrid');
-                $grid.jsGrid("option","pageIndex",1);
-                $grid.jsGrid("loadData");
-            }
+
+            $("#jsGridInfluencers").jsGrid({
+             width:"250%",
+             inserting:true,
+             editing:true,
+             sorting:true,
+             paging:true,
+             pageSize:100,
+             autoload: true,
+             filtering:true,
+             autoSearch:true,
+             pageLoading: true,
+
+             pagerFormat: "Pages: {first} {prev} {pages} {next} {last} &nbsp;&nbsp; {pageIndex} of {pageCount} &nbsp;&nbsp; Records Shown: {itemCount}",
+             controller: {
+             insertItem: function(item) {
+                 var grid=this._grid;
+                 return $.ajax({
+                     type: "POST",
+                     url: "influencer",
+                     data: item,
+                     headers:{"X-CSRFToken": '{{ csrf_token }}'},
+                     error: function (data){
+                         alert(data.statusText);
+                     },
+                     success: function(data){
+                         grid.jsGrid("option","pageIndex",1);
+                         grid.jsGrid("loadData");
+                     },
+                      error:function(data){
+                         alert(data.statusText);
+                     },
+                 });
+             },
+
+             deleteItem: function(item) {
+                 var $grid = $(this);
+                 return $.ajax({
+                     type: "DELETE",
+                     url: "b2b_lead",
+                     data: JSON.stringify(item),
+                     headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
+                     error:function(data){
+                         alert(data.responseJSON.error);
+                     },
+                     success: function(data){
+                         alert("Deleted");
+                     }
+                 });
+             },
+             onItemInserted:function(args){
+                 $("#jsGrid").jsGrid("loadData");
+             }
+             ,
+             updateItem: function(item) {
+                 return $.ajax({
+                     type: "PUT",
+                     url: "influencer",
+                     data: JSON.stringify(item),
+                     headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
+                     error:function(data){
+                         if(!data.responseJSON){
+                             alert(data.statusText);
+                         }
+                         else alert(data.responseJSON.error);
+                     }
+                 });
+             },
+
+             loadData: function(filter) {
+                                 var d = $.Deferred();
+                                 $.ajax({
+                                     url: "influencers_query",
+                                     dataType: "json",
+                                     data:JSON.stringify(filter),
+                                     method:"POST",
+                                     headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
+
+                                 }).done(function(response) {
+                                         var records=response.data;
+                                         records.forEach(function(record,index){
+                                             record.index = index+1;
+                                         });
+                                      d.resolve(response);
+                                 });
+                                 return d.promise();
+                             }
+                         },
+
+             fields: [
+                 {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
+                 {title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
+                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "value", textField: "Name", required: true},
+                 {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
+                     var domainNameIndex = value.lastIndexOf("@");
+                     if(domainNameIndex == -1) return value;
+                     else return value.substring(0,domainNameIndex)} },
+
+                 {name: "email", title: influencerFieldsDict.email, type: "text", validate: "required", validate:
+                  {
+                     validator: function(value, item){
+                         var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+                         return regex.test(value);
+                     },
+                     message:"Please enter valid email."
+                 }},
+
+                 {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: [{Name:'',value:''},{Name:'Yes',value:true},{Name:'No', value:false}] , valueField: "value", textField: "Name" },
+                 {name: "last_contacted_on", title: influencerFieldsDict.last_contacted_on ,type: "myDateField",  align: "center",  inserting: true, editing: true,autosearch: true,filtering:true },
+                 {name: "is_duplicate", title: influencerFieldsDict.is_duplicate, type: "checkbox", visible: true, inserting: true, editing: true},
+                 {name: "order_num", title: influencerFieldsDict.order_num,  type: "text" },
+                 {name: "order_code", title: influencerFieldsDict.order_code, type:"text" },
+                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true },
+                 {name: "influencer_name", title: influencerFieldsDict.influencer_name, type: "text", required: true },
+                 {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name" },
+                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", required: true },
+                 {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number"},
+                 {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name" },
+                 {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name" },
+                 {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name" },
+                 {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text"},
+                 {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
+                 {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
+                 {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name" },
+                 {name: "commission", title: influencerFieldsDict.commission, type: "text", filtering: false},
+                 {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
+                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false },
+                 {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
+                 {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
+                 //{name: "updated_by", title: "Created By", type:"number", visible:false,inserting: false, editing: false },
+                 {type: "control" }
+             ]
+
+             });
+
+
+
+
         });
-    },
-    onItemInserted:function(args){
-        $("#jsGrid").jsGrid("loadData");
+     </script>
 
-    },
 
-    deleteItem: function(item) {
-        return $.ajax({
-            type: "DELETE",
-            url: "lead",
-            data: JSON.stringify(item),
-            headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
-            error:function(data){
-                alert(data.responseJSON.error);
-            },
-            success: function(data){
-                alert("Deleted");
-            }
-        });
-    },
 
-    updateItem: function(item) {
-        item.company_name.trim();
-        return $.ajax({
-            type: "PUT",
-            url: "lead",
-            data: JSON.stringify(item),
-            headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
-            error:function(data){
-                if(!data.responseJSON){
-                    alert(data.statusText);
-                }
-                else alert(data.responseJSON.error);
-            }
-        });
-    },
-
-    loadData: function(filter) {
-                        var d = $.Deferred();
-                        $.ajax({
-                            url: "leads",
-                            dataType: "json",
-                            data:JSON.stringify(filter),
-                            method:"POST",
-                             headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
-
-                        }).done(function(response) {
-                                var records=response.data;
-                                records.forEach(function(lead,index){
-                                    lead.index = index+1;
-                                });
-                                d.resolve(response);
-                        });
-
-                        return d.promise();
-                    }
-                },
-
-    fields: [
-        {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
-        {title: "SN", name: "index", type: "number", visible: true, inserting: false, editing: false ,width:40, align: "center", filtering:false },
-        {title: "Company", name: "company_name", type: "text", validate: "required",width:150, insertValue: function(){
-            return this.insertControl.val().trim();
-        }, editValue: function(){
-            return this.editControl.val().trim();
-        } },
-        {title: "Position", name: "position", type: "text", validate: "required",width:125 },
-        {title: "Location", name: "location", type: "text", validate: "required",width:100},
-        {title: "Portals", name: "portals", type: "select",validate: "required",width:65, items: portals ,valueField: "Name", textField: "Name"},
-        {title: "Lead Age",name: "created_at", type: "text",width:40, itemTemplate:function(value,item){var secs= Math.abs(new Date()-new Date(value));
-          return days=Math.floor(secs/(24*60*60*1000));
-        },inserting:false, editing: false,filtering:false, align: "center"  },
-
-        {title: "Is DND", name: "is_dnd", type: "checkbox", sorting: false,width:40, inserting: is_user_staff, editing: is_user_staff },
-        {title: "Is Client",name: "is_client", type: "checkbox", sorting: false,width:40, inserting: is_user_staff, editing: is_user_staff, filtering: is_user_staff },
-        {title: "Created on",name: "created_at", type: "myDateField", width:70, align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },//autosearch: true,filtering:true},
-        {title: "Analyst",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, width:80, itemTemplate: function(value,item){
-            var domainNameIndex = value.lastIndexOf("@");
-            if(domainNameIndex == -1) return value;
-            else return value.substring(0,domainNameIndex)} },
-        {title: "Comments", name: "comments", type: "textarea",align: "right", inserting: true, editing: true},
-        {title: "Response", name: "response", type: "select", items:response_choices ,selectedIndex: -1 , valueField: "Name", textField: "Name", width: 65 },
-        {title: "Created By", name: "created_by", type:"number", visible:false,inserting: false, editing: false },
-        {type: "control" }
-    ]
-
-    });
-
-    // Now b2b lead
-    function loadGrid(grid){
-        //$grid.jsGrid("option","pageIndex",1);
-        $grid.jsGrid("loadData");
-    }
-
-    $('#jsGrid_B2B').jsGrid({
-    width:"250%",
-    inserting:true,
-    editing:true,
-    sorting:true,
-    paging:true,
-    pageSize:100,
-    autoload: true,
-    filtering:true,
-    autoSearch:true,
-    pageLoading: true,
-
-    pagerFormat: "Pages: {first} {prev} {pages} {next} {last} &nbsp;&nbsp; {pageIndex} of {pageCount} &nbsp;&nbsp; Records Shown: {itemCount}",
-    rowClass: function(item,itemdIndex){
-        if(item.is_dnd) return 'jsgrid-dnd-row';
-        else if(item.is_client) return 'jsgrid-client-row';
-        else if(item.response == 'Positive') return 'jsgrid-positive-row';
-        else return '';
-    },
-    controller: {
-    insertItem: function(item) {
-        if(!item.comments)item.comments='';
-        return $.ajax({
-            type: "POST",
-            url: "b2b_lead",
-            data: item,
-            headers:{"X-CSRFToken": '{{ csrf_token }}'},
-            error: function (data){
-                alert(data.responseJSON.error);
-            },
-            success: function(data){
-                var $grid = $('#jsGrid_B2B');
-                $grid.jsGrid("option","pageIndex",1);
-                $grid.jsGrid("loadData");
-            },
-             error:function(data){
-                alert(data.statusText);
-            },
-        });
-    },
-
-    deleteItem: function(item) {
-        var $grid = $(this);
-        return $.ajax({
-            type: "DELETE",
-            url: "b2b_lead",
-            data: JSON.stringify(item),
-            headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
-            error:function(data){
-                alert(data.responseJSON.error);
-            },
-            success: function(data){
-                alert("Deleted");
-            }
-        });
-    },
-    onItemInserted:function(args){
-        $("#jsGrid").jsGrid("loadData");
-    }
-    ,
-    updateItem: function(item) {
-        return $.ajax({
-            type: "PUT",
-            url: "b2b_lead",
-            data: JSON.stringify(item),
-            headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
-            error:function(data){
-                if(!data.responseJSON){
-                    alert(data.statusText);
-                }
-                else alert(data.responseJSON.error);
-            }
-        });
-    },
-
-    loadData: function(filter) {
-                        var d = $.Deferred();
-                        $.ajax({
-                            url: "b2b_leads_query",
-                            dataType: "json",
-                            data:JSON.stringify(filter),
-                            method:"POST",
-                            headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
-
-                        }).done(function(response) {
-                                var records=response.data;
-                                records.forEach(function(lead,index){
-                                    lead.index = index+1;
-                                });
-                             d.resolve(response);
-                        });
-                        return d.promise();
-                    }
-                },
-
-    fields: [
-        {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
-        {title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
-        {title: "Company", name: "company_name", type: "text", validate: "required", width:150 },
-        {name: "full_name", title: b2bFieldsDict.full_name,  type: "text", validate: "required", width:150  },
-        {name: "first_name", title: b2bFieldsDict.first_name, type: "text"},
-        {name: "last_name", title: b2bFieldsDict.last_name, type: "text"},
-        {name: "designation", title: b2bFieldsDict.designation, type: "text", validate: "required", width:150 },
-        {name: "email", title: b2bFieldsDict.email, type: "text", validate: "required", width:200, validate:
-         {
-            validator: function(value, item){
-                var regex = /^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-                return regex.test(value);
-            },
-            message:"Please enter valid email."
-        }},
-        {name: "linkedin_id", title: b2bFieldsDict.linkedin_id,  type: "text", validate: "required", itemTemplate: makeTextToLink},
-        {name: "position", title: b2bFieldsDict.position, type: "text", validate: "required", width:125 },
-        {name: "job_location", title: b2bFieldsDict.job_location,  type: "text", validate: "required"},
-        {name: "job_posting_links", title: b2bFieldsDict.job_posting_links,  type: "textarea", validate: "required",itemTemplate: makeTextToLink},
-        {name: "phone_number", title: b2bFieldsDict.phone_number,  type: "textarea"},
-        {name: "address", title: b2bFieldsDict.address,  type: "textarea"},
-        {name: "state", title: b2bFieldsDict.state,  type: "text"},
-        {name: "zip_code", title: b2bFieldsDict.zip_code,  type: "text"},
-        {name: "company_website", title: b2bFieldsDict.company_website,  type: "text", itemTemplate: makeTextToLink},
-        {name: "company_linkedin", title: b2bFieldsDict.company_linkedin,  type: "text",  validate: "required", itemTemplate: makeTextToLink},
-        {title: "Lead Age",name: "created_at", type: "text", itemTemplate:function(value,item){var secs= Math.abs(new Date()-new Date(value));
-          return days=Math.floor(secs/(24*60*60*1000));
-        },inserting:false, editing: false,filtering:false, align: "center"  },
-        {title: "Is DND", name: "is_dnd", type: "checkbox", sorting: false, inserting: is_user_staff, editing: is_user_staff },
-        {title: "Is Client",name: "is_client", type: "checkbox", sorting: false, inserting: is_user_staff, editing: is_user_staff, filtering: is_user_staff },
-        {title: "Created on",name: "created_at", type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
-        {title: "Analyst",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
-            var domainNameIndex = value.lastIndexOf("@");
-            if(domainNameIndex == -1) return value;
-            else return value.substring(0,domainNameIndex)} },
-        {title: "Comments", name: "comments", type: "textarea",align: "right", inserting: true, editing: true},
-        {title: "Response", name: "response", type: "select", items: response_choices ,selectedIndex: -1 , valueField: "Name", textField: "Name" },
-        {title: "Created By", name: "created_by", type:"number", visible:false,inserting: false, editing: false },
-        {type: "control" }
-    ]
-
-    });
-
-});
-
-$(function(){
-$('#startDate').datepicker({
-                    defaultDate: new Date(),
-                    dateFormat: 'dd/mm/yy',
-                     });
-$('#endDate').datepicker({
-                    defaultDate: new Date(),
-                    dateFormat: 'dd/mm/yy',
-                     });
-var clickedSummaryDownload=false;
-if ( is_user_staff) {
-    $('#report input[name=download]').show()
-    }
-else{
-    $('#report input[name=download]').hide()
-}
-$('#report input[type=submit]').click(function(e){
-    if (this.name == 'download'){
-        clickedSummaryDownload = true;}
-    else{
-        clickedSummaryDownload = false;}
-
-})
-$('#b2b_leads').submit(function(e){
-    e.preventDefault();
-    var form = $(this);
-    var files = form[0][0].files;
-    if(files.length < 1){
-        alert("Please select csv file");
-        return;
-    }
-    if(files[0].name.split(".").pop() != "csv"){
-        alert("Please select csv file only");
-        return;
-    }
-    form[0][2].disabled=true;
-    $.ajax({
-        data: new FormData(form[0]),
-        processData: false,
-        contentType: false,
-        url: form.attr('action'),
-        method: form.attr('method'),
-        success: function(response){
-            var duplicates = response.duplicates;
-            var createdCount = response.createdCount;
-            console.log("after succes");
-            if(duplicates && duplicates.length > 0){
-             /*
-                create modal window ,and pass leads created number till now.
-                let model window be submitted, with labels of data and radio buttons.
-                Once the window is submitted, as the response of the submission,
-                once that is submitted , put the final count into view.
-
-             */
-             form[0][2].disabled=false;
-             form[0].reset();
-             handleDuplicates(createdCount, duplicates);
-
-            }else{
-                alert(createdCount+" Lead(s) have been created");
-                loadGrid($('#jsGrid_B2B'));
-
-            }
-        },
-        error: function(response){
-            alert(response.responseJSON.error);
-        },
-
-        complete: function(data){
-            form[0][2].disabled=false;
-            form[0].reset();
-        }
-    });
-
-});
-
-$('#lead_summary').submit(function(e){
-    e.preventDefault();
-    var form=$(this);
-
-    var url = form.attr('action');
-    var formData = {};
-    startDate = form.find('#startDate').datepicker('getDate');
-    var errorMsg=undefined;
-    if(!startDate)errorMsg="Invalid Data Entered \nStart Date Required \n"
-    endDate = form.find('#endDate').datepicker('getDate');
-    if(!endDate)errorMsg+="End Date Required";
-    if(errorMsg){
-        alert(errorMsg);
-        return;
-        }
-
-    formData.startDate = startDate.getTime()/1000;
-    formData.endDate = endDate.getTime()/1000;
-    if(formData.startDate > formData.endDate){
-        alert("Invalid Data Entered \nEnd Date should be greater than Start Date");
-        return;
-    }
-    formData.option = form.find('#downloadOptions option:selected').val();
-    formData.dataType = form.find('#dataType option:selected').val();
-    if(formData.dataType == 'lead_summary'){
-        url = 'lead_summary';
-    }else{
-        url = 'b2b_lead_summary';
-    }
-    if(clickedSummaryDownload){
-        clickedSummaryDownload=false;
-        var downloadUrl = window.location.origin+"/"+url+"?startDate="+formData.startDate+"&endDate="+formData.endDate+"&option="+formData.option;
-        window.open(downloadUrl,'_parent');
-        return;
-    }
-
-
-    $.ajax({
-        url:url,
-        method:"POST",
-        data:JSON.stringify(formData),
-        headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
-        success:function(data){
-            var leadSummary=data.summary;
-            var totalLeads = data.total;
-            $('#summaryGrid').jsGrid({
-
-            fields: [
-                    { name: "username", type: "text", width: 100,textField: "User" },
-                    { name: "num_leads", type: "number", title: "Leads ( total: " +totalLeads+" )" },
-                    { type: "control", deleteButton: false,editButton: false,width:1 }
-                ],
-            width: "100%",
-            sorting: true,
-            data: leadSummary
-     });
-        },
-        error:function(error){
-            alert(error.statusText);
-        }
-    });
-});
-
-});
-
-
-</script>
-<div id="header">
-    <div id="branding">
-        <h1 id="site-name" align="center"><a href="/" class = "white-color">Leads Management</a></h1>
-    </div>
-
-    <div align="right">
-        {{username}}&nbsp;&nbsp;&nbsp;
-        <a href="change-password" class = "white-color">Change Pwd</a>&nbsp;&nbsp;
-        <a href="logout" class = "white-color">Logout</a>&nbsp;
-        <a href="admin" target="_blank" class = "white-color">Admin</a>&nbsp;
-        <a href="#allCompaniesSection" class = "white-color">All-Companies</a>&nbsp;&nbsp;
-        <a href="#b2bSection" class = "white-color">B2B</a>&nbsp;&nbsp;
-        <a href="#file_upload_b2b" class = "white-color">Upload</a>&nbsp;&nbsp;
-        <a href="#report"  class = "white-color">Reports</a>
-        <script>
-            $("a[href='#report'] , a[href='#b2bSection'], a[href='#allCompaniesSection'] ,a[href='#file_upload_b2b']").click(function(e){
-                e.preventDefault();
-           if(this.hash == "#allCompaniesSection"){
-            $("#b2bSection").hide();
-            $("#allCompaniesSection").show();
-           }
-           else if(this.hash == "#b2bSection" || this.hash == "#file_upload_b2b"){
-            $("#allCompaniesSection").hide();
-             $("#b2bSection").show();
-           }
-           $('html,body').animate({scrollTop: $(this.hash).offset().top-100},'slow');
-            });
-        </script>
-        <br><br>
-    </div>
-</div>
-
-<section id="allCompaniesSection">
-<div id="subheading">
-    <div id="branding">
-        <h1 id="site-name" align="center"><a href="/" class = "white-color">All Companies</a></h1>
-    </div>
-</div>
-
-<div id="jsGrid"></div>
-<br><br><br><br>
-</section>
-
-<section id="b2bSection">
-    <div id="b2b">
-        <div id="subheading">
-            <div id="branding">
-                <h1 id="site-name" align="center"><a href="/" class = "white-color">B2B</a></h1>
-            </div>
-        </div>
-        <div id="jsGrid_B2B"></div>
-
-        <br>
-
-        <div id="subheading">
-            <div id="branding">
-                <h1 id="site-name" class = "white-color" align="center">Upload B2B CSV</h1>
-            </div>
-        </div>
-         <br>
-        <div id="file_upload_b2b" style="width: 20%; margin: auto;" class="jsgrid-grid-header jsgrid-header-scrollbar" >
-
-            <form action="b2b_leads" id="b2b_leads" method="post" enctype="multipart/form-data">
-
-                <input type="file" id="myfile" name="myfile"/>
-                {% csrf_token %}
-                <input type="submit" class="jsgrid-button jsgrid-mode-button"  value="Upload">
-            </form>
-        </div>
-        <br>
-        <br>
-
-<div id="myModal" class="modal"  >
-  <!-- Modal content -->
-  <div class="modal-content" style="width: 80%; margin: auto;">
-    <div class="modal-header">
-      <span class="close">&times;</span>
-        <div id="subheading">
-            <div id="branding">
-                <h1 id="modalCaption" align="center">40 Leads Created.Choose your action for remainig 10</h1>
-            </div>
-
-        </div>
-
-    </div>
-
-  <script>
-        function handleDuplicates(createdCount2, duplicates){
-            $modalHeader = $('.modal-content  #modalCaption').text(createdCount2+' Leads Created .Choose your action for remainig '+duplicates.length+" leads");
-            $tableDiv = $("#b2bRemainingRows");
-            $tableDiv.html("");
-            var modal = document.getElementById("myModal");
-            duplicates.forEach(function(duplicate, index){
-                //New row.
-
-                $tr = $("<tr>")
-                $tr.attr('class', 'jsgrid-row');
-                var newLead= duplicate[0];
-                var oldLead = duplicate[1];
-
-                $td = $("<td>"+"New"+"</td>");
-                $td.attr('class', 'jsgrid-cell');
-                $tr.append($td);
-                ["Full Name", "Company Name", "Email", "Designation"].forEach(function(x, i){
-
-                    $td = $("<td>"+newLead[x]+"</td>");
-                    if( newLead[x] != oldLead[b2bFieldsDict[x]] ){
-                        $td.attr('class', 'jsgrid-cell value-diff');
-                    }else{
-                        $td.attr('class', 'jsgrid-cell');
-                    }
-                    $tr.append($td);
-                });
-                // Leaving analyst value to empty for the new row.
-                $td = $("<td>");
-                $td.attr('class', 'jsgrid-cell');
-                $tr.append($td);
-
-                $td = $('<td class="jsgrid-cell" name="radioAction">');
-                $radio1 ='<input type="radio"  value="skip"  name= '+index+' >Skip';
-                $radio2 ='<input type="radio" value= '+index+' name ='+index+' >Override';
-                $td.append([$radio1,"&nbsp;&nbsp;", $radio2]);
-                $tr.append($td);
-                $tableDiv.append($tr);
-
-
-                //Old row.
-                $tr = $("<tr></tr>")
-                $td = $("<td>"+"Old"+"</td>");
-                $td.attr('class', 'jsgrid-cell');
-                $tr.append($td);
-
-                $tr.attr('class', 'jsgrid-alt-row');
-                ["full_name", "company_name", "email", "designation", "created_by__username"].forEach(function(x, i){
-                    $td = $("<td>"+oldLead[x]+"</td>");
-                    if( oldLead[x] != newLead[b2bFieldsDict[x]] && x != "created_by__username"){
-                        $td.attr('class', 'jsgrid-cell value-diff');
-                    }else{
-                        $td.attr('class', 'jsgrid-cell');
-                    }
-                    $tr.append($td);
-                });
-
-
-                $tableDiv.append($tr);
-
-
-                //add extra empty line.
-                $tr = $("<tr>")
-                $tr.attr('class', 'jsgrid-row');
-                $td = $("<td>");
-                $td.attr('class', 'jsgrid-cell');
-                $tr.append($td);
-                $tableDiv.append($tr);
-            });
-            modal.style.display = "block";
-
-            $('#remainingLeadsSubmit').click(function(e){
-                leadsInput = [];
-                var isSubmissionValid = true;
-                $tableDiv.find('tr td[name="radioAction"]').each(function(i){
-                    $td = $(this);
-                    var radioSelected = false;
-                    $td.children().each(function(i){
-                        if(!radioSelected){
-                            radioSelected = $(this).is(':checked')
-                        }
-
-                    });
-                    if(!radioSelected){
-                        isSubmissionValid =false;
-                        $td.attr("style",  "background:#ffe3e5;");
-                    }else{
-                        $td.attr("style",  "");
-                    }
-                });
-
-                if(!isSubmissionValid){
-                    alert("Please select all inputs");
-                    return false;
-                }
-                $tableDiv.find('tr td input[type=radio]:checked').each(function(i){
-                        var x= $(this);
-                        x.val() != 'skip' &&  leadsInput.push(duplicates[x.val()][0]);
-                });//else
-                modal.style.display = "none";
-                if(leadsInput.length > 0){
-                $.ajax({
-                    data: JSON.stringify(leadsInput),
-                    url:'b2b_leads?filterDuplicates=true',
-                    method: 'post',
-                    headers:{"X-CSRFToken": '{{ csrf_token }}',"content-type":"text/json"},
-                    success:function(result){
-                         alert("Upload Successful. Total "+(createdCount2+result.createdCount)+" Lead(s) have been created");
-                         $('html,body').animate({scrollTop: $('#jsGrid_B2B').offset().top-100},'slow');
-                         loadGrid($('#jsGrid_B2B'));
-                    },
-                    error: function(error){
-                        alert(error.statusText);
-                    }
-                });
-            }else{
-                        alert("Upload Successful. Total "+(createdCount2+leadsInput.length)+" Lead(s) have been created");
-                        loadGrid($('#jsGrid_B2B'));
-            }
-            });
-        }
-
-  </script>
-    <div class="modal-body">
-      <div class="jsgrid-grid-header jsgrid-header-scrollbar">
-               <table class="jsgrid-table">
-                   <tr class="jsgrid-header-row" >
-                       <th class="jsgrid-header-cell">Old/New</th>
-                       <th class="jsgrid-header-cell">Full Name</th>
-                       <th class="jsgrid-header-cell">Company Name</th>
-                       <th class="jsgrid-header-cell">Email</th>
-                       <th class="jsgrid-header-cell">Designation</th>
-                       <th class="jsgrid-header-cell">Analyst</th>
-                       <th class="jsgrid-header-cell">Action</th>
-                   </tr>
-               </table>
-           </div>
-
-            <div class="jsgrid-grid-body">
-
-                <table class="jsgrid-table" id="b2bRemainingRows">
-                </table>
-                   <br><br>
-                <button align="center" value="Submit" class="alignCenter" id="remainingLeadsSubmit">Submit</button>
-            </div>
-    </div>
-
-  </div>
-
-</div>
-
-<script>
-// Get the modal
-var modal = $("#myModal");
-
-// Get the button that opens the modal
-var btn = $("#myBtn");
-
-// Get the <span> element that closes the modal
-var span = $(".close")[0];
-
-// When the user clicks the button, open the modal
-
-// When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-  modal.css("display","none")
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-  if (event.target.id == "myModal") {
-   //modal.css("display","none")
-  }
-}
-$("#b2bSection").hide();
-</script>
-
-    </div>
-</section>
-
-<div id="subheading">
-            <div id="branding">
-                <h1 id="site-name" align="center"><a href="/" class = "white-color">Reports</a></h1>
-            </div>
-        </div>
-<br>
-<section style=" height: 500px; width: 80%; margin: auto;" >
-
-
-<div id="report" class="jsgrid-grid-header jsgrid-header-scrollbar" >
-    <form action="lead_summary" id="lead_summary" method="post">
-        &nbsp<label for="startDateSpan">Start Date:</label>
-        <span id="startDateSpan">
-            <input id="startDate" name="startDate" autocomplete="off" />
-        </span>&nbsp;&nbsp;
-        <label for="endDateSpan">End Date:</label>
-        <span id="endDateSpan">
-            <input  id="endDate" name="endDate" autocomplete="off" />
-        </span>
-        <label for="dataType">Category</label>
-        <select id="dataType"><option value="lead_summary">All Companies</option>>  <option value="b2b_lead_summary">B2B</option> </select>&nbsp;&nbsp;
-<!--        <label for="summary_user_names">Users</label>-->
-<!--        <span><select multiple name="summary_user_names" id="summary_user_names" width="20px"><option >All</option></select></span>-->
-        <label for="downloadOptions">Type</label>
-        <select id="downloadOptions" ><option value="">All</option><option value="is_client">Clients</option><option value="is_dnd">DNDs</option></select>
-        &nbsp; &nbsp;<input type="submit" value="View Summary" name="Go"/>&nbsp;&nbsp;
-           <input type="submit" value="Download CSV" name="download"/>
-        {% csrf_token %}
-    </form>
-</div>
-    <br>
-<div id="summaryGrid"></div>
-    <br><br><br><br><br><br>
-</section>
-
-
-</body>
+   </body>
 </html>

@@ -13,30 +13,34 @@ class InfluencerBase(models.Model):
 
 
 
-class Influecner(InfluencerBase):
+class Influencer(InfluencerBase):
     post_status = map(lambda x: (x, x), influencer_post_status)
+    paid_unpaid_choices = map(lambda x: (x, x), paid_unpaid_choices)
     is_influencer = models.BooleanField(default=False, verbose_name='Influencer/Prospect')
     email = models.EmailField(null=False, verbose_name='Email', blank=False)
-    is_ansered = models.BooleanField(default=False, verbose_name='Answered')
+    is_answered = models.BooleanField(default=False, verbose_name='Answered')
     last_contacted_on = models.DateField(verbose_name='Last Contacted Date')
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
     order_num = models.CharField(null=True, blank=True, verbose_name='Order_Number',max_length=20)
     order_code = models.CharField(null=True, blank=True, verbose_name='Order Code', max_length=20)
-    date_of_promotion = models.DateField(verbose_name='Day of Promotion')
-    name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
+    date_of_promotion_on = models.DateField(verbose_name='Day of Promotion')
+    influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
     paid_or_unpaid = models.CharField(max_length=10, default=None, null=True, choices=paid_unpaid_choices,
                                 verbose_name='Paid/UnPaid')
     channel_username =  models.CharField(null=False, max_length=100, verbose_name='Instagram Username')
-    channel = models.CharField(null=False, max_length=2000, verbose_name='Channel'),
+    followers_count =  models.IntegerField(null=True, verbose_name='Followers')
+    channel = models.CharField(null=False, max_length=2000, verbose_name='Channel')
     country = models.CharField(null=False, verbose_name='Country',max_length=100)
     collection = models.CharField(null=True, verbose_name='Collection', max_length=100)
     discount_coupon = models.CharField(null=True, verbose_name='Discount code', max_length=100)
-    valid_till = models.DateTimeField(verbose_name='Valid Till')
+    valid_from = models.DateTimeField(verbose_name='Valid From', null=True)
+    valid_till = models.DateTimeField(verbose_name='Valid Till', null=True)
     status = models.CharField(max_length=30, default=None, null=True, verbose_name='Status',choices=post_status)  # need to be correctd
-    commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission')
-    product_cost = models.CharField(max_length=10, verbose_name='Product Cost')
-    revenue_analysis = models.CharField(max_length=10, verbose_name='Revenue Analysis')
-    revenue_click = models.CharField(max_length=10, verbose_name='Revenue Click')
+    commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
+    product_cost = models.FloatField( verbose_name='Product Cost', null=True)
+    revenue_analysis = models.CharField(max_length=10, verbose_name='Revenue Analysis', null=True)
+    revenue_click = models.FloatField( verbose_name='Revenue Click', null=True)
+    currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
 
 

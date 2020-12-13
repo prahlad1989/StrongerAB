@@ -2,7 +2,8 @@ from django import forms
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.forms import ModelForm
-from Influencers.models import Lead, B2BLead
+from Influencers.models import Lead, B2BLead, Influencer
+from StrongerAB1.settings import influencer_mandatory_fields
 
 
 class LoginForm(forms.Form):
@@ -41,6 +42,19 @@ class LeadForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(LeadForm, self).__init__(*args, **kwargs)
         self.fields['response'].required = False
+
+class InfluencerForm(ModelForm):
+    class Meta:
+        model = Influencer
+        exclude = ['created_at','updated_at','created_by','updated_by','ID','is_duplicate', Influencer.currency.field_name, Influencer.revenue_analysis.field_name, Influencer.valid_till.field_name, Influencer.valid_from.field_name]
+    def __init__(self, *args, **kwargs):
+        super(InfluencerForm, self).__init__(*args, **kwargs)
+
+        for field in Influencer._meta.get_fields():
+            if field.verbose_name not in influencer_mandatory_fields and field.name in self.fields:
+                self.fields[field.name].required = False
+
+
 
 
 class B2BLeadForm(ModelForm):

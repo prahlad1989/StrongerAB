@@ -20,9 +20,12 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import TemplateView
-from Influencers.forms import LoginForm, LeadForm, B2BLeadForm
+from Influencers.forms import LoginForm, LeadForm, B2BLeadForm, InfluencerForm
 from Influencers.models import Lead as LeadTable, LeadSpan, B2BLead, B2BLead as B2BLeadModel
-from StrongerAB1.settings import LEADSPAN, ADMINSPAN, response_choices
+from Influencers.models import Influencer as InfluencerModel, Constants as Constants
+
+
+from StrongerAB1.settings import LEADSPAN, ADMINSPAN, response_choices, influencer_post_status, paid_unpaid_choices
 from StrongerAB1.settings import portals as portal_choices
 from StrongerAB1.settings import adminMsg
 from StrongerAB1.settings import b2b_mandatory_fields
@@ -47,14 +50,166 @@ class Login(TemplateView):
         loginform = LoginForm(request.POST)
         if loginform.is_valid():
             user = loginform.user
-            logger.debug('user is %s', user)
+            logger.info('user is %s', user)
             login(request, user)
-        return HttpResponseRedirect('all_companies')
+        return HttpResponseRedirect('all_influencers')
 
 
 def logout(request):
     log_out(request)
     return HttpResponseRedirect('login')
+
+
+
+#creating super class
+
+
+class Item(TemplateView):
+    template_name = 'Lead_Template.html'
+
+    def getForm(self, request):
+        return LeadForm(request.POST)
+
+    # login_required=True
+    def post(self, request, *args, **kwargs):
+        leadForm = self.getForm(request)
+        lead = leadForm.save(commit=False)
+        span = LeadSpan.objects.get(pk=1)
+        span = span.spanInDays
+        since = datetime.now() - timedelta(span)
+        leads = self.model.objects.filter(Q(company_name__iexact=lead.company_name)).filter(
+            Q(created_at__gte=since) | Q(is_client=True))
+        if leads and len(leads) > 0:
+            logger.error(msg='lead with same company already existed', )
+            return JsonResponse({'error': 'lead with Same company already existed'}, status=500)
+        else:
+            # check if any lead that is still in dnd period
+            leads = self.model.objects.filter(Q(company_name__iexact=lead.company_name)).filter(is_dnd=True)
+            if leads and len(leads) > 0:
+                return HttpResponse({'error': 'Company Already in DND period. Pls check'}, status=500)
+
+        lead.created_by = request.user
+        lead.span = span
+        lead.save()
+        logger.info(
+            "lead with company name {1} saved by user {0}".format(request.user.get_username(), lead.company_name))
+        return HttpResponse(status=201, content=lead)
+
+    def getModel(self):
+        return LeadTable
+
+    model = LeadTable
+    duplicateCheckField = 'company_name'
+
+    def delete(self, request, *args, **kwargs):
+        lead = json.loads(request.body)
+        id = lead['id']
+        lead = self.getModel().objects.get(pk=id)
+        if lead.created_by_id != request.user.pk and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
+        if datetime.now(timezone.utc) - lead.created_at > timedelta(
+                1) and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
+
+        company_name = lead.company_name
+        lead.delete()
+        logger.info(
+            'Lead with company name{0} has been deleted by user {1}'.format(company_name, request.user.get_username()))
+        return JsonResponse('Lead with company name {0} has been deleted.'.format(company_name), safe=False, status=200)
+
+
+    def put(self, request, *args, **kwargs):
+        lead = json.loads(request.body)
+        id = lead['id']
+
+        leadFromDB = self.model.objects.get(pk=id)
+        if leadFromDB.created_by_id != request.user.pk and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
+        if datetime.now(timezone.utc) - leadFromDB.created_at > timedelta(
+                1) and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
+
+        span = LeadSpan.objects.get(pk=1)
+        span = span.spanInDays
+        since = datetime.now() - timedelta(span)
+        duplicateFilter = { '{0}__iexact'.format(self.duplicateCheckField): lead[self.duplicateCheckField]
+                            }
+        leads = self.model.objects.filter(**duplicateFilter).filter(~Q(id=id) &
+            Q(created_at__gte=since) | Q(is_client=True))
+        if leads and len(leads) > 0:
+            logger.error(msg='lead with same {0} already existed'.format(self.duplicateCheckField), )
+            return JsonResponse({'error': 'Lead with Same {0} already existed'.format(self.duplicateCheckField)}, status=500)
+        else:
+            # check if any lead that is still in dnd period
+            leads = self.model.objects.filter(**duplicateFilter).filter(is_dnd=True).filter(~Q(id=id))
+            if leads and len(leads) > 0:
+                return JsonResponse({'error': 'Company Already in DND period. Pls check'}, status=500)
+
+        for field in leadFromDB._meta.fields:
+            if field.name in lead and not field.name in ['created_by']:
+                leadFromDB.__setattr__(field.name, lead[field.name])
+
+        leadFromDB.save()
+        logger.info(
+            "lead with company name {1} updated by user {0}".format(request.user.get_username(),
+                                                                    leadFromDB.company_name))
+        return JsonResponse(leadToDict(leadFromDB), safe=False, status=200)
+
+
+class BaseView(View):
+    model = InfluencerModel
+
+    duplicateCheckField = 'channel_username'
+
+    def getForm(self, request):
+        return InfluencerForm(request.POST)
+
+    def post(self, request, *args, **kwargs):
+        form = self.getForm(request)
+        logger.info("form is {0}".format(form))
+        logger.info("form errors {0}".format(form.errors))
+        object = form.save(commit=False)
+        object.created_by = request.user
+        object.save()
+        logger.info(
+            "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
+        return HttpResponse(status=201, content=object)
+
+
+    def put(self, request, *args, **kwargs):
+        item = json.loads(request.body)
+        id = item['id']
+
+        itemFromDB = self.model.objects.get(pk=id)
+        if itemFromDB.created_by_id != request.user.pk and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
+        if datetime.now(timezone.utc) - itemFromDB.created_at > timedelta(
+                1) and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
+
+        for field in itemFromDB._meta.fields:
+
+            if field.name in item and "_on" in field.name:
+                date = datetime.fromtimestamp(item[field.name]).date()
+                itemFromDB.__setattr__(field.name, date)
+
+            elif field.name in item and not field.name in ['created_by']:
+                itemFromDB.__setattr__(field.name, item[field.name])
+
+        itemFromDB.save()
+        logger.info(
+            "Record with influencer name {1} updated by user {0}".format(request.user.get_username(),
+                                                                    itemFromDB.channel_username))
+        return JsonResponse(leadToDict(itemFromDB), safe=False, status=200)
+
+
+
+
+
+class InfluencerView(BaseView):
+    pass
+
+
 
 
 class Lead(TemplateView):
@@ -152,30 +307,42 @@ class Lead(TemplateView):
 def index(request):
     context = dict()
     context['portal_choices'] = json.dumps(list(map(lambda x: x[0], portal_choices)))
-    context['response_choices'] = json.dumps(list(map(lambda x: x[0], response_choices)))
+    countries = Constants.objects.filter(Q(key='countries')).values('value')[0]['value']
+    context['countries'] = countries
+    collections = Constants.objects.filter(Q(key='collections')).values('value')[0]['value']
+    context['collections'] = collections
+    channels = Constants.objects.filter(Q(key='chaneels')).values('value')[0]['value']
+    context['channels'] = channels
     context["is_user_staff"] = request.user.is_staff
     context["username"] = request.user.get_username()
-    b2bFields = B2BLeadModel._meta.get_fields()
-    b2bFieldsDict = dict()
-    for field in b2bFields:
-        b2bFieldsDict[field.attname] = field.verbose_name
-        b2bFieldsDict[field.verbose_name] = field.attname
-    context["b2bFieldsDict"] = b2bFieldsDict
-    return render(request,'index.html', context)
+    influencerFields = InfluencerModel._meta.get_fields()
+    influencerFieldsDict = dict()
+    for field in influencerFields:
+        influencerFieldsDict[field.attname] = field.verbose_name
+        influencerFieldsDict[field.verbose_name] = field.attname
+    context["influencerFieldsDict"] = influencerFieldsDict
+    return render(request,'Influencer.html', context)
 
 @login_required()
-def allCompanies(request):
+def allInfluencers(request):
     context = dict()
     context['portal_choices'] = json.dumps(list(map(lambda x: x[0], portal_choices)))
-    context['response_choices'] = json.dumps(list(map(lambda x: x[0], response_choices)))
+    countries = Constants.objects.filter(Q(key='countries')).values('value')[0]['value']
+    context['list_of_countries'] = countries
+    collections = Constants.objects.filter(Q(key='collections')).values('value')[0]['value']
+    context['collections'] = collections
+    channels = Constants.objects.filter(Q(key='channels')).values('value')[0]['value']
+    context['channels'] = channels
     context["is_user_staff"] = request.user.is_staff
     context["username"] = request.user.get_username()
-    b2bFields = B2BLeadModel._meta.get_fields()
-    b2bFieldsDict = dict()
-    for field in b2bFields:
-        b2bFieldsDict[field.attname] = field.verbose_name
-        b2bFieldsDict[field.verbose_name] = field.attname
-    context["b2bFieldsDict"] = b2bFieldsDict
+    influencerFields = InfluencerModel._meta.get_fields()
+    influencerFieldsDict = dict()
+    for field in influencerFields:
+        influencerFieldsDict[field.attname] = field.verbose_name
+        influencerFieldsDict[field.verbose_name] = field.attname
+    context["influencerFieldsDict"] = influencerFieldsDict
+    context["influencer_post_status"] = influencer_post_status
+    context["paid_unpaid_choices"] = paid_unpaid_choices
     return render(request, 'Influencer.html', context)
 
 
@@ -356,11 +523,12 @@ def dump(obj):
 
 
 def leadToDict(x):
-    b2bLead = model_to_dict(x, fields=[field.name for field in x._meta.fields])
-    b2bLead['created_on'] = x.created_on
-    b2bLead['created_at'] = x.created_at
-    b2bLead['created_by__username'] = x.created_by.username
-    return b2bLead
+    item = model_to_dict(x, fields=[field.name for field in x._meta.fields])
+    item['created_at'] = x.created_at
+    item['updated_at'] = x.updated_at
+    item['created_by__username'] = x.created_by.username
+    item['updated_by__username'] = x.updated_by.username
+    return item
 
 
 class LeadsQuery(View):
@@ -431,6 +599,97 @@ class LeadsQuery(View):
         leads = leadsQuery.values(*self.fields_in_response)[offSet:limitEnds]
         leadsJSON = {"data": list(leads), "itemsCount": count}
         return JsonResponse(leadsJSON, safe=False, status=200)
+
+
+
+#Influencer query
+
+
+
+class InfluencersQuery(View):
+
+    @method_decorator(login_required)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    model = InfluencerModel
+    # leads search
+    fields_in_response = ('id',
+                          InfluencerModel.is_influencer.field_name,
+                          'created_by__username',
+                          InfluencerModel.email.field_name,
+                          InfluencerModel.is_answered.field_name,
+                          InfluencerModel.last_contacted_on.field_name,
+                          InfluencerModel.is_duplicate.field_name,
+                          InfluencerModel.order_num.field_name,
+                          InfluencerModel.order_code.field_name,
+                          InfluencerModel.date_of_promotion_on.field_name,
+                          InfluencerModel.influencer_name.field_name,
+                          InfluencerModel.channel_username.field_name,
+                          InfluencerModel.followers_count.field_name,
+                          InfluencerModel.collection.field_name,
+                          InfluencerModel.channel.field_name,
+                          InfluencerModel.discount_coupon.field_name,
+                          InfluencerModel.valid_till.field_name,
+                          InfluencerModel.status.field_name,
+                          InfluencerModel.status.field_name,
+                          InfluencerModel.commission.field_name,
+                          InfluencerModel.product_cost.field_name,
+                          InfluencerModel.revenue_analysis.field_name,
+                          InfluencerModel.revenue_click.field_name,
+                          InfluencerModel.comments.field_name,
+                          InfluencerModel.created_at.field_name,
+                          InfluencerModel.updated_at.field_name,
+                          "updated_by__username")
+
+    def getQueryParams(self, request):
+        searchParams = dict()
+        requestBody = json.loads(request.body)
+        for k, v in requestBody.items():
+            if isinstance(v, bool) and v:
+                searchParams[k] = v
+            elif isinstance(v, str) and len(v) > 0:
+                if k in ['sortOrder', 'sortField']:
+                    searchParams[k] = v
+                elif k == 'created_by':
+                    k = "created_by__username"
+                elif k == 'updated_by':
+                    k = "updated_by__username"
+                    # searchParams["created_by__username__icontains"] = v
+                else:
+                    searchParams[k + "__icontains"] = v
+            elif k == 'created_at' and v:
+                searchParams['created_at__gte'] = datetime.fromtimestamp(v)
+                searchParams['created_at__lte'] = datetime.fromtimestamp(v) + timedelta(1)
+            elif k in ['pageIndex', 'pageSize']:
+                searchParams[k] = v
+        pageIndex = searchParams.pop("pageIndex")
+        pageSize = searchParams.pop("pageSize")
+
+        offSet = (pageIndex - 1) * pageSize
+        limitEnds = pageIndex * pageSize
+        return (offSet, limitEnds, searchParams)
+
+    def post(self, request, *args, **kwargs):
+        since = getLeadsPeriod(request.user)
+        offSet, limitEnds, searchParams = self.getQueryParams(request)
+        sortField = None
+        if "sortField" in searchParams:
+            sortField = searchParams.pop("sortField")
+            sortOrder = searchParams.pop("sortOrder")
+            if sortOrder == "desc":
+                sortField = "-" + sortField
+
+        query = self.model.objects.select_related('created_by').filter(
+            **searchParams)
+        if sortField:
+            query = query.order_by(sortField)
+        count = query.count()
+        records = query.values(*self.fields_in_response)[offSet:limitEnds]
+        recordsJSON = {"data": list(records), "itemsCount": count}
+        return JsonResponse(recordsJSON, safe=False, status=200)
+
+
 
 
 class B2BLead(Lead):

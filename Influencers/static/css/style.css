@@ -38,6 +38,9 @@
     -o-transition: ease all 0.5s;
 }
 
+.jsgrid-table{
+    color: #262626;
+}
 
 input,button,select,textarea {
 	outline: none !important;
@@ -45,12 +48,12 @@ input,button,select,textarea {
 
 html,
 body {
-    color: #898989;
+    color: black;
     font-size: 15px;
     font-family: 'Poppins', sans-serif;
     line-height: normal;
     font-weight: 400;
-    /*overflow-x: hidden !important;*/
+    /*overflow-x: scroll !important;*/
 }
 
 body {
@@ -486,13 +489,13 @@ a:focus {
 }
 
 .layout_padding {
-    padding-top: 80px;
-    padding-bottom: 100px;
+    padding-top: 0px;
+    padding-bottom: 10px;
 }
 
 .layout_padding_2 {
     padding-top: 100px;
-    padding-bottom: 80px;
+    padding-bottom: 10px;
 }
 
 .full {
@@ -901,8 +904,26 @@ div.left_head ul li i {
     z-index: 1;
     width: 100%;
     background: #fff;
-    box-shadow: 0 15px 30px -25px #000;
+    box-shadow: 0 0px 30px -25px #000;
 }
+
+
+th {
+    text-align: inherit;
+    color: #1e72bc;
+    font-weight: 500;
+}
+
+
+/*.header {
+    padding: 10px 0;
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    background: #fff;
+    box-shadow: 0 15px 30px -25px #000;
+}*/
+
 
 .logo {
     margin: 13px 0 13px;
@@ -989,7 +1010,7 @@ div.left_head ul li i {
     padding: 15px 15px;
     display: block;
     color: #333;
-    font-size: 15px;
+    font-size: 23px;
 }
 
 .menu > ul > li:hover > a,

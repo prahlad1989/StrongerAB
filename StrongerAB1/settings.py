@@ -118,7 +118,7 @@ WSGI_APPLICATION = 'StrongerAB1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'TestingDB2',
+        'NAME': 'TestingDB3',
         'USER': 'postgres',
         'PASSWORD': 'leadsmgmt',
         'HOST': 'ec2-13-233-72-107.ap-south-1.compute.amazonaws.com',
@@ -170,7 +170,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 STATICFILES_DIR = (
  	os.path.join(BASE_DIR,'Influencers/static'),
  )
-paid_unpaid_choices = (('Paid','Paid'),('Unpaid','Unpaid'),('OK','OK'))
+paid_unpaid_choices = ['','Paid','Unpaid','OK']
 portals=[('',''), ('Linked In','Linked In'),('Indeed','Indeed'),('Glassdoor','Glassdoor'),('Other','Other')]
 b2b_mandatory_fields = ["Company Name", "Full Name", "Designation", "Email", "Linkedin ID", "Position", "Job Location", "Job Posting Links", "Company Website", "Company Linkedin" ]
 LOGIN_URL='/login'
@@ -180,4 +180,5 @@ LEADSPAN=30
 ADMINSPAN=100
 adminMsg=" if you are not admin"
 response_choices = [('',''),('Positive','Positive'),('Negative', 'Negative'),('Future','Future')]
-influencer_post_status = ['Published', 'Reminder1', 'Reminder2', 'Abandoned']
+influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
+influencer_mandatory_fields =['Instagram','Country','Influencer/Prospect','ID']
