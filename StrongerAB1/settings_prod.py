@@ -116,15 +116,15 @@ WSGI_APPLICATION = 'StrongerAB1.wsgi.application'
 #    }
 #}
 DATABASES = {
-     'default': {
-         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-         'NAME': 'myproject',
-         'USER': 'postgres',
-         'PASSWORD': 'leadsmgmt',
-         'HOST': 'localhost',
-         'PORT': '5432',
-     }
- }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'influ1',
+        'USER': 'postgres',
+        'PASSWORD': 'abc123',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation
@@ -169,7 +169,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 STATICFILES_DIR = (
  	os.path.join(BASE_DIR,'Influencers/static'),
  )
-
+paid_unpaid_choices = ['','Paid','Unpaid','OK']
 portals=[('',''), ('Linked In','Linked In'),('Indeed','Indeed'),('Glassdoor','Glassdoor'),('Other','Other')]
 b2b_mandatory_fields = ["Company Name", "Full Name", "Designation", "Email", "Linkedin ID", "Position", "Job Location", "Job Posting Links", "Company Website", "Company Linkedin" ]
 LOGIN_URL='/login'
@@ -179,3 +179,7 @@ LEADSPAN=30
 ADMINSPAN=100
 adminMsg=" if you are not admin"
 response_choices = [('',''),('Positive','Positive'),('Negative', 'Negative'),('Future','Future')]
+influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
+influencer_mandatory_fields =['Instagram','Country','Influencer/Prospect','ID']
+is_influencer_choices = ["", "Prospect", "Influencer"]
+is_answered_choices = ["","Yes", "No"]

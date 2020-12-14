@@ -118,11 +118,10 @@ WSGI_APPLICATION = 'StrongerAB1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'TestingDB3',
+        'NAME': 'influ1',
         'USER': 'postgres',
-        'PASSWORD': 'leadsmgmt',
-        'HOST': 'ec2-13-233-72-107.ap-south-1.compute.amazonaws.com',
-
+        'PASSWORD': 'abc123',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
