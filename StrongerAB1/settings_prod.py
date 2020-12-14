@@ -118,9 +118,9 @@ WSGI_APPLICATION = 'StrongerAB1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'influ1',
+        'NAME': 'influ_test1',
         'USER': 'postgres',
-        'PASSWORD': 'abc123',
+        'PASSWORD': 'influ',
         'HOST': 'localhost',
         'PORT': '5432',
     }
