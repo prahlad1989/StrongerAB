@@ -181,7 +181,7 @@ class BaseView(View):
     def put(self, request, *args, **kwargs):
         item = json.loads(request.body)
         id = item['id']
-
+        index = item['index']
         itemFromDB = self.model.objects.get(pk=id)
         if itemFromDB.created_by_id != request.user.pk and not request.user.is_staff:
             return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
@@ -203,7 +203,9 @@ class BaseView(View):
         logger.info(
             "Record with influencer name {1} updated by user {0}".format(request.user.get_username(),
                                                                     itemFromDB.channel_username))
-        return JsonResponse(leadToDict(itemFromDB), safe=False, status=200)
+        itemFromDB = leadToDict(itemFromDB)
+        itemFromDB['index'] = index
+        return JsonResponse(itemFromDB, safe=False, status=200)
 
 
 
