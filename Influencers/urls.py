@@ -33,8 +33,8 @@ urlpatterns = [
     path('b2b_lead_summary', login_required(views.B2BLeadSummary.as_view()), name='b2b_lead_summary'),
     path('influencers_query',login_required(views.InfluencersQuery.as_view()), name='influencers_query'),
     path('all_influencers',views.allInfluencers,name='AllInfluencers'),
-    path('change-password', auth_views.PasswordChangeView.as_view(success_url='all_companies')),
-    path('login', auth_views.LoginView.as_view(template_name="login.html", redirect_field_name="all_companies")),
+    path('change-password', auth_views.PasswordChangeView.as_view(success_url='all_influencers')),
+    path('login', auth_views.LoginView.as_view(template_name="login.html", redirect_field_name="all_influencers")),
     path('accounts/', include('django.contrib.auth.urls')),
     path('logout', auth_views.LogoutView.as_view()),
     path('usernames',views.getUserNames,name='getUserNames')
