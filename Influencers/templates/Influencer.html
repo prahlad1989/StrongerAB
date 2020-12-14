@@ -34,25 +34,25 @@
    <script>
        var is_user_staff='{{ is_user_staff }}'=='True';
        var influencerFieldsDict = {{ influencerFieldsDict |safe }};
+       var dropDownFunction = function(x){return {Name:x}} ;
        var list_of_countries = '{{ list_of_countries }}'
-       list_of_countries = list_of_countries.split(",").map(function(x){return {Name:x}});
+       list_of_countries = list_of_countries.split(",").map(dropDownFunction);
        var collections = '{{collections}}'
-       collections = collections.split(",").map(function(x){return {Name:x}});
+       collections = collections.split(",").map(dropDownFunction);
        var channels = '{{channels}}'
        console.log(channels);
-       channels = channels.split(",").map(function(x){return {Name:x}});
+       channels = channels.split(",").map(dropDownFunction);
        console.log(channels);
        var influencer_post_status = {{ influencer_post_status| safe }}
-       influencer_post_status = influencer_post_status.map(function(x){
-        return {Name:x};
-       });
+       influencer_post_status = influencer_post_status.map(dropDownFunction);
        var paid_unpaid_choices = {{ paid_unpaid_choices| safe }}
        console.log(paid_unpaid_choices);
-       paid_unpaid_choices = paid_unpaid_choices.map(function(x){
-        return {Name:x};
-       });
+       paid_unpaid_choices = paid_unpaid_choices.map(dropDownFunction);
        console.log(paid_unpaid_choices);
-       var influencerOrProspectItems = [{Name:'',value:''},{Name: "Prospect", value: false},{Name: "Influencer", value: true}];
+       var influencerOrProspectItems = {{ is_influencer_choices|safe }}
+       influencerOrProspectItems = influencerOrProspectItems.map(dropDownFunction);
+       var is_answered_choices = {{ is_answered_choices |safe }};
+       is_answered_choices = is_answered_choices.map(dropDownFunction);
        //console.log("influencer_post_status "+influencer_post_status);
 
        function loadGrid($grid){
@@ -323,7 +323,7 @@
              fields: [
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
                  {title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
-                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "value", textField: "Name", required: true},
+                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: "required"},
                  {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      var domainNameIndex = value.lastIndexOf("@");
                      if(domainNameIndex == -1) return value;
@@ -338,7 +338,7 @@
                      message:"Please enter valid email."
                  }},
 
-                 {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: [{Name:'',value:''},{Name:'Yes',value:true},{Name:'No', value:false}] , valueField: "value", textField: "Name" },
+                 {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: is_answered_choices, valueField: "Name", textField: "Name" },
                  {name: "last_contacted_on", title: influencerFieldsDict.last_contacted_on ,type: "myDateField",  align: "center",  inserting: true, editing: true,autosearch: true,filtering:true },
                  {name: "is_duplicate", title: influencerFieldsDict.is_duplicate, type: "checkbox", visible: true, inserting: true, editing: true},
                  {name: "order_num", title: influencerFieldsDict.order_num,  type: "text" },
@@ -346,21 +346,21 @@
                  {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true },
                  {name: "influencer_name", title: influencerFieldsDict.influencer_name, type: "text", required: true },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name" },
-                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", required: true },
+                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", validate: "required"},
                  {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number"},
                  {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name" },
                  {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name" },
-                 {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name" },
+                 {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name", validate: "required" },
                  {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text"},
                  {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
                  {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
                  {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name" },
-                 {name: "commission", title: influencerFieldsDict.commission, type: "text", filtering: false},
+                 {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false},
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
                  {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
                  {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
-                 //{name: "updated_by", title: "Created By", type:"number", visible:false,inserting: false, editing: false },
+                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:false,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by" },
                  {type: "control" }
              ]
 

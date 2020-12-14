@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
-from StrongerAB1.settings import portals as portal_choices
-from StrongerAB1.settings import response_choices,paid_unpaid_choices,influencer_post_status
+from StrongerAB1.settings import portals as portal_choices, is_influencer_choices
+from StrongerAB1.settings import response_choices,paid_unpaid_choices,influencer_post_status, is_answered_choices
 
 
 
@@ -16,9 +16,11 @@ class InfluencerBase(models.Model):
 class Influencer(InfluencerBase):
     post_status = map(lambda x: (x, x), influencer_post_status)
     paid_unpaid_choices = map(lambda x: (x, x), paid_unpaid_choices)
-    is_influencer = models.BooleanField(default=False, verbose_name='Influencer/Prospect')
+    is_influencer_choices = map(lambda x: (x, x), is_influencer_choices)
+    is_answered_choices = map(lambda x: (x, x), is_answered_choices)
+    is_influencer = models.CharField(max_length=12, verbose_name='Influencer/Prospect', choices=is_influencer_choices, null=False, blank=False)
     email = models.EmailField(null=False, verbose_name='Email', blank=False)
-    is_answered = models.BooleanField(default=False, verbose_name='Answered')
+    is_answered = models.CharField( verbose_name='Answered', choices=is_answered_choices, max_length=5, null=True, blank=True)
     last_contacted_on = models.DateField(verbose_name='Last Contacted Date')
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
     order_num = models.CharField(null=True, blank=True, verbose_name='Order_Number',max_length=20)
@@ -26,10 +28,10 @@ class Influencer(InfluencerBase):
     date_of_promotion_on = models.DateField(verbose_name='Day of Promotion')
     influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
     paid_or_unpaid = models.CharField(max_length=10, default=None, null=True, choices=paid_unpaid_choices,
-                                verbose_name='Paid/UnPaid')
+                                verbose_name='Paid/UnPaid', blank=True)
     channel_username =  models.CharField(null=False, max_length=100, verbose_name='Instagram Username')
     followers_count =  models.IntegerField(null=True, verbose_name='Followers')
-    channel = models.CharField(null=False, max_length=2000, verbose_name='Channel')
+    channel = models.CharField(null=False, max_length=2000, verbose_name='Channel', blank=False)
     country = models.CharField(null=False, verbose_name='Country',max_length=100)
     collection = models.CharField(null=True, verbose_name='Collection', max_length=100)
     discount_coupon = models.CharField(null=True, verbose_name='Discount code', max_length=100)
@@ -38,7 +40,7 @@ class Influencer(InfluencerBase):
     status = models.CharField(max_length=30, default=None, null=True, verbose_name='Status',choices=post_status)  # need to be correctd
     commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
-    revenue_analysis = models.CharField(max_length=10, verbose_name='Revenue Analysis', null=True)
+    revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True)
     revenue_click = models.FloatField( verbose_name='Revenue Click', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')

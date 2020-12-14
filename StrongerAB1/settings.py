@@ -182,3 +182,5 @@ adminMsg=" if you are not admin"
 response_choices = [('',''),('Positive','Positive'),('Negative', 'Negative'),('Future','Future')]
 influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
 influencer_mandatory_fields =['Instagram','Country','Influencer/Prospect','ID']
+is_influencer_choices = ["", "Prospect", "Influencer"]
+is_answered_choices = ["","Yes", "No"]

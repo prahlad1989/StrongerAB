@@ -25,7 +25,8 @@ from Influencers.models import Lead as LeadTable, LeadSpan, B2BLead, B2BLead as 
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants
 
 
-from StrongerAB1.settings import LEADSPAN, ADMINSPAN, response_choices, influencer_post_status, paid_unpaid_choices
+from StrongerAB1.settings import LEADSPAN, ADMINSPAN, response_choices, influencer_post_status, paid_unpaid_choices, \
+    is_influencer_choices, is_answered_choices
 from StrongerAB1.settings import portals as portal_choices
 from StrongerAB1.settings import adminMsg
 from StrongerAB1.settings import b2b_mandatory_fields
@@ -170,6 +171,7 @@ class BaseView(View):
         logger.info("form errors {0}".format(form.errors))
         object = form.save(commit=False)
         object.created_by = request.user
+        object.update_by = request.user
         object.save()
         logger.info(
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
@@ -193,9 +195,10 @@ class BaseView(View):
                 date = datetime.fromtimestamp(item[field.name]).date()
                 itemFromDB.__setattr__(field.name, date)
 
-            elif field.name in item and not field.name in ['created_by']:
+            elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr']:
+                print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
-
+        itemFromDB.update_by = request.user
         itemFromDB.save()
         logger.info(
             "Record with influencer name {1} updated by user {0}".format(request.user.get_username(),
@@ -343,6 +346,8 @@ def allInfluencers(request):
     context["influencerFieldsDict"] = influencerFieldsDict
     context["influencer_post_status"] = influencer_post_status
     context["paid_unpaid_choices"] = paid_unpaid_choices
+    context["is_influencer_choices"] = is_influencer_choices
+    context["is_answered_choices"] = is_answered_choices
     return render(request, 'Influencer.html', context)
 
 
@@ -613,10 +618,17 @@ class InfluencersQuery(View):
         return super().dispatch(*args, **kwargs)
 
     model = InfluencerModel
+
+    def getDateFields(self):
+        return []
+        # fields = self.model._meta.get_fields()
+        # for field in fields:
+
     # leads search
     fields_in_response = ('id',
                           InfluencerModel.is_influencer.field_name,
                           'created_by__username',
+                          'created_by__id',
                           InfluencerModel.email.field_name,
                           InfluencerModel.is_answered.field_name,
                           InfluencerModel.last_contacted_on.field_name,
@@ -627,9 +639,11 @@ class InfluencersQuery(View):
                           InfluencerModel.influencer_name.field_name,
                           InfluencerModel.channel_username.field_name,
                           InfluencerModel.followers_count.field_name,
+                          InfluencerModel.country.field_name,
                           InfluencerModel.collection.field_name,
                           InfluencerModel.channel.field_name,
                           InfluencerModel.discount_coupon.field_name,
+                          InfluencerModel.valid_from.field_name,
                           InfluencerModel.valid_till.field_name,
                           InfluencerModel.status.field_name,
                           InfluencerModel.status.field_name,
@@ -640,7 +654,7 @@ class InfluencersQuery(View):
                           InfluencerModel.comments.field_name,
                           InfluencerModel.created_at.field_name,
                           InfluencerModel.updated_at.field_name,
-                          "updated_by__username")
+                          "updated_by__username", "updated_by__id")
 
     def getQueryParams(self, request):
         searchParams = dict()
@@ -663,6 +677,13 @@ class InfluencersQuery(View):
                 searchParams['created_at__lte'] = datetime.fromtimestamp(v) + timedelta(1)
             elif k in ['pageIndex', 'pageSize']:
                 searchParams[k] = v
+            elif "_on" in k and v:
+                searchParams[k+"__gte"] = datetime.fromtimestamp(v).date()
+                searchParams[k + "__lte"] = datetime.fromtimestamp(v).date() + timedelta(1)
+            elif "__username" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
+                searchParams[k+"__gte"] = datetime.fromtimestamp(v)
+                searchParams[k + "__lte"] = datetime.fromtimestamp(v) + timedelta(1)
+
         pageIndex = searchParams.pop("pageIndex")
         pageSize = searchParams.pop("pageSize")
 
