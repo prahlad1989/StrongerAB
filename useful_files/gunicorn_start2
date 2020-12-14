@@ -2,9 +2,9 @@
 # Name of the application
 NAME="LeadsMgmt1"
 # Django project directory
-DJANGODIR=/var/www/yoursite/LeadsMgmt
+DJANGODIR=/var/www/yoursite/StrongerAB
 # we will communicte using this unix socket
-SOCKFILE=/var/www/yoursite/LeadsMgmt/run/gunicorn.sock
+SOCKFILE=/var/www/yoursite/StrongerAB/run/gunicorn.sock
 # the user to run as
 USER=centos
 # the group to run as
@@ -12,9 +12,9 @@ GROUP=centos
 # how many worker processes should Gunicorn spawn
 NUM_WORKERS=6
 # which settings file should Django use
-DJANGO_SETTINGS_MODULE=LeadsMgmt1.settings
+DJANGO_SETTINGS_MODULE=StrongerAB1.settings
 # WSGI module name
-DJANGO_WSGI_MODULE=LeadsMgmt1.wsgi
+DJANGO_WSGI_MODULE=StrongerAB1.wsgi
 echo "Starting $NAME as `whoami`"
 # Activate the virtual environment
 cd $DJANGODIR
