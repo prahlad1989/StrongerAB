@@ -217,9 +217,8 @@
                      return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
                 },
                 insertValue: function() {
-
-                    var date=this.filterControl.datepicker("getDate");
-                    if(date) return (date.getTime())/1000;
+                    var date=this._insertPicker.datepicker("getDate");
+                    if(date) return date.toLocaleDateString();
                     return null;
                 },
                 editValue: function() {
@@ -348,7 +347,7 @@
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name" },
                  {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", validate: "required"},
                  {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number"},
-                 {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name" },
+                 {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name", validate: "required" },
                  {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name" },
                  {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name", validate: "required" },
                  {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text"},

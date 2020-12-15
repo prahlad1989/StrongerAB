@@ -95,7 +95,7 @@ class BaseView(View):
         logger.info("form errors {0}".format(form.errors))
         object = form.save(commit=False)
         object.created_by = request.user
-        object.update_by = request.user
+        object.updated_by = request.user
         object.save()
         logger.info(
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
@@ -120,7 +120,7 @@ class BaseView(View):
                 itemFromDB.__setattr__(field.name, date)
 
             elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr']:
-                print(field.name)
+                #print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
         itemFromDB.update_by = request.user
         itemFromDB.save()
