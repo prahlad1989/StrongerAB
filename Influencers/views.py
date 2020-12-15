@@ -91,8 +91,8 @@ class BaseView(View):
 
     def post(self, request, *args, **kwargs):
         form = self.getForm(request)
-        logger.info("form is {0}".format(form))
-        logger.info("form errors {0}".format(form.errors))
+        #logger.info("form is {0}".format(form))
+        #logger.info("form errors {0}".format(form.errors))
         object = form.save(commit=False)
         object.created_by = request.user
         object.updated_by = request.user
