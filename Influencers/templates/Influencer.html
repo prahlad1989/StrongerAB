@@ -270,7 +270,7 @@
                  var $grid = $(this);
                  return $.ajax({
                      type: "DELETE",
-                     url: "b2b_lead",
+                     url: "influencer",
                      data: JSON.stringify(item),
                      headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
                      error:function(data){

@@ -73,6 +73,22 @@ class BaseView(View):
     def getForm(self, request):
         return InfluencerForm(request.POST)
 
+    def delete(self, request, *args, **kwargs):
+        item = json.loads(request.body)
+        id = item['id']
+        item = self.model.objects.get(pk=id)
+        if item.created_by_id != request.user.pk and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
+        if datetime.now(timezone.utc) - item.created_at > timedelta(
+                1) and not request.user.is_staff:
+            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
+
+        influ_email = item.email
+        item.delete()
+        logger.info(
+            'Record with email {0} has been deleted by user {1}'.format(influ_email, request.user.get_username()))
+        return JsonResponse('ecord with email {0} has been deleted.'.format(influ_email), safe=False, status=200)
+
     def post(self, request, *args, **kwargs):
         form = self.getForm(request)
         logger.info("form is {0}".format(form))
