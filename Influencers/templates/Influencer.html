@@ -65,7 +65,7 @@
       <header class="header header_style1">
          <div class="container">
             <div class="row">
-               <div class="col-md-12 col-lg-12" style="max-height:160px">
+               <div class="col-md-9 col-lg-10" style="max-height:160px">
                   <div class="logo"><a href="index.html"><img src="static/images/influencer_logo.png" alt="#" /></a></div>
                   <div class="main_menu float-right">
                      <div class="menu">
@@ -172,9 +172,6 @@
                         return $result;
                     }
 
-
-
-
             function MyDateField(config) {
             jsGrid.Field.call(this, config);
         };
@@ -230,6 +227,24 @@
             });
 
             jsGrid.fields.myDateField = MyDateField;
+
+           /* function insert_on_enter(field) {
+              field.on("keydown", function(e) {
+                if(e.keyCode === 13) {
+                  $("#jsGridInfluencers").jsGrid("insertItem");
+                  return false;
+                }
+              });
+            }
+
+            function update_on_enter(field) {
+              field.on("keydown", function(e) {
+                if(e.keyCode === 13) {
+                  $("#jsGridInfluencers").jsGrid("updateItem");
+                  return false;
+                }
+              });
+            } */
 
 
             $("#jsGridInfluencers").jsGrid({
@@ -323,7 +338,7 @@
              fields: [
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
                  {title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
-                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: "required"},
+                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" }},
                  {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      var domainNameIndex = value.lastIndexOf("@");
                      if(domainNameIndex == -1) return value;
