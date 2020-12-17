@@ -10,8 +10,9 @@ class InfluencerBase(models.Model):
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='updated_by_user')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated At')
-
-
+    class Meta:
+        ordering = ["-created_at", "-updated_at"]
+        indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
 
 class Influencer(InfluencerBase):
     post_status = map(lambda x: (x, x), influencer_post_status)
@@ -21,17 +22,17 @@ class Influencer(InfluencerBase):
     is_influencer = models.CharField(max_length=12, verbose_name='Influencer/Prospect', choices=is_influencer_choices, null=False, blank=False)
     email = models.EmailField(null=False, verbose_name='Email', blank=False)
     is_answered = models.CharField( verbose_name='Answered', choices=is_answered_choices, max_length=5, null=True, blank=True)
-    last_contacted_on = models.DateField(verbose_name='Last Contacted Date')
+    last_contacted_on = models.DateField(verbose_name='Last Contacted Date', null=True)
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
     order_num = models.CharField(null=True, blank=True, verbose_name='Order_Number',max_length=20)
     order_code = models.CharField(null=True, blank=True, verbose_name='Order Code', max_length=20)
-    date_of_promotion_on = models.DateField(verbose_name='Day of Promotion')
+    date_of_promotion_on = models.DateField(verbose_name='Day of Promotion', null=True)
     influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
     paid_or_unpaid = models.CharField(max_length=10, default=None, null=True, choices=paid_unpaid_choices,
                                 verbose_name='Paid/UnPaid', blank=True)
-    channel_username =  models.CharField(null=False, max_length=100, verbose_name='Instagram Username')
+    channel_username =  models.CharField( max_length=100, verbose_name='Instagram Username', null=True)
     followers_count =  models.IntegerField(null=True, verbose_name='Followers')
-    channel = models.CharField(null=False, max_length=2000, verbose_name='Channel', blank=False)
+    channel = models.CharField( max_length=2000, verbose_name='Channel',  null=True)
     country = models.CharField(null=False, verbose_name='Country',max_length=100)
     collection = models.CharField(null=True, verbose_name='Collection', max_length=100)
     discount_coupon = models.CharField(null=True, verbose_name='Discount code', max_length=100)
@@ -44,6 +45,9 @@ class Influencer(InfluencerBase):
     revenue_click = models.FloatField( verbose_name='Revenue Click', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
+
+    class Meta:
+        indexes = [models.Index(fields=['email','channel_username'])]
 
 
 class Constants(InfluencerBase):

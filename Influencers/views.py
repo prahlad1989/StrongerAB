@@ -92,8 +92,13 @@ class BaseView(View):
     def post(self, request, *args, **kwargs):
         form = self.getForm(request)
         #logger.info("form is {0}".format(form))
-        #logger.info("form errors {0}".format(form.errors))
+        logger.error("form errors {0}".format(form.errors))
+        #check if already record exists with email
+
         object = form.save(commit=False)
+        rows = self.model.objects.filter(Q(email__iexact=object.email))
+        if rows and len(rows) > 0:
+            object.is_duplicate = True
         object.created_by = request.user
         object.updated_by = request.user
         object.save()
