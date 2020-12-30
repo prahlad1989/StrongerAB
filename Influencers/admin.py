@@ -5,5 +5,5 @@ from Influencers.models import Influencer,Constants
 #from Influencers.models import User
 
 
-admin.site.register(Influencer)
+#admin.site.register(Influencer)
 admin.site.register(Constants)

@@ -24,7 +24,7 @@ class Influencer(InfluencerBase):
     is_answered = models.CharField( verbose_name='Answered', choices=is_answered_choices, max_length=5, null=True, blank=True)
     last_contacted_on = models.DateField(verbose_name='Last Contacted Date', null=True)
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
-    order_num = models.CharField(null=True, blank=True, verbose_name='Order_Number',max_length=20)
+    order_num = models.CharField(null=True, blank=True, verbose_name='Order Number',max_length=20)
     order_code = models.CharField(null=True, blank=True, verbose_name='Order Code', max_length=20)
     date_of_promotion_on = models.DateField(verbose_name='Day of Promotion', null=True)
     influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
@@ -43,11 +43,13 @@ class Influencer(InfluencerBase):
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
     revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True)
     revenue_click = models.FloatField( verbose_name='Revenue Click', null=True)
+    #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
+    is_old_order = models.BooleanField(default=False, verbose_name='Is Old Order?')
 
     class Meta:
-        indexes = [models.Index(fields=['email','channel_username'])]
+        indexes = [models.Index(fields=['email','channel_username', '-valid_from'])]
 
 
 class Constants(InfluencerBase):

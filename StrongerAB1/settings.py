@@ -63,6 +63,11 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
+        'background_task': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
 INSTALLED_APPS = [
@@ -72,7 +77,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'background_task',
     'Influencers',
+
+
 ]
 
 MIDDLEWARE = [
@@ -180,6 +188,9 @@ ADMINSPAN=100
 adminMsg=" if you are not admin"
 response_choices = [('',''),('Positive','Positive'),('Negative', 'Negative'),('Future','Future')]
 influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
-influencer_mandatory_fields =['Instagram','Country','Influencer/Prospect','ID']
+#influencer_mandatory_fields =['Instagram Username','Country','Influencer/Prospect','ID']
+influencer_mandatory_fields =['Instagram Username','Country','Influencer/Prospect','ID']
 is_influencer_choices = ["", "Prospect", "Influencer"]
 is_answered_choices = ["","Yes", "No"]
+centra_key = "3241414680f9153462ae0e0b1c7dcefd"
+centra_api_url = "https://stronger.centra.com/graphql"

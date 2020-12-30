@@ -1,24 +1,35 @@
-B2BLead.company_name.field_name,
-B2BLead.full_name.field_name,
-B2BLead.first_name.field_name,
-B2BLead.last_name.field_name,
-B2BLead.designation.field_name,
-B2BLead.email.field_name,
-B2BLead.linkedin_id.field_name,
-B2BLead.position.field_name,
-B2BLead.job_location.field_name,
-B2BLead.job_posting_links.field_name,
-B2BLead.phone_number.field_name,
-B2BLead.address.field_name,
-B2BLead.state.field_name,
-B2BLead.zip_code.field_name,
-B2BLead.company_website.field_name,
-B2BLead.company_linkedin.field_name,
-B2BLead.is_client.field_name,
-B2BLead.is_dnd.field_name,
-B2BLead.span.field_name,
-B2BLead.comments.field_name,
-B2BLead.response.field_name,
-B2BLead.created_by__username.field_name,
-B2BLead.created_at.field_name,
-B2BLead.created_on.field_name
+from Influencers.models import Influencer
+from Influencers.tasks import  OrdersUpdate
+from logging import getLogger
+from django.test import TestCase
+from datetime import date,datetime,timedelta
+from django.utils import timezone
+logger = getLogger(__name__)
+
+class OrdersUpdateTest(TestCase):
+    def setUp(self):
+        Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India', influencer_name='test_name1',discount_coupon= "MECENAT15", valid_from=timezone.now() -timedelta(100), valid_till=timezone.now() )
+
+        Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India', influencer_name='test_name1',
+                              discount_coupon="THERESE20", valid_from=timezone.now() - timedelta(100),
+                              valid_till=timezone.now()+timedelta(10))
+        Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India', influencer_name='test_name1',
+                              discount_coupon="20DANIFIT", valid_from=timezone.now()   - timedelta(100),
+                              valid_till=timezone.now() +timedelta(10))
+
+    def testOrdersUpdate(self):
+        obj = OrdersUpdate()
+        obj.update()
+        print("stupid")
+        objects = Influencer.objects.all()
+        for obj in objects:
+            logger.info("revenue click after is {0} ".format(obj.revenue_click))
+        self.assertTrue("good",2==2)
+
+
+
+
+
+
+
+

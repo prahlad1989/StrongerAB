@@ -32,6 +32,7 @@ urlpatterns = [
     # path('lead_summary',login_required(views.LeadSummary.as_view()), name ='lead_summary'),
     # path('b2b_lead_summary', login_required(views.B2BLeadSummary.as_view()), name='b2b_lead_summary'),
     path('influencers_query',login_required(views.InfluencersQuery.as_view()), name='influencers_query'),
+    path('influencers', login_required(views.Influencers.as_view()), name='influencers'),
     path('all_influencers',views.allInfluencers,name='AllInfluencers'),
     path('change-password', auth_views.PasswordChangeView.as_view(success_url='all_influencers')),
     path('login', auth_views.LoginView.as_view(template_name="login.html", redirect_field_name="all_influencers")),

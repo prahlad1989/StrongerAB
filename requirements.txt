@@ -4,3 +4,5 @@ pytz==2020.1
 email-validator==1.1.2
 django-background-tasks==1.2.5
 urllib3==1.26.2
+jsonpath-ng
+python-graphql-client

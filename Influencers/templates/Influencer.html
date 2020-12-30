@@ -41,15 +41,15 @@
        var collections = '{{collections}}'
        collections = collections.split(",").map(dropDownFunction);
        var channels = '{{channels}}'
-       console.log(channels);
+       //console.log(channels);
        channels = channels.split(",").map(dropDownFunction);
-       console.log(channels);
+       //console.log(channels);
        var influencer_post_status = {{ influencer_post_status| safe }}
        influencer_post_status = influencer_post_status.map(dropDownFunction);
        var paid_unpaid_choices = {{ paid_unpaid_choices| safe }}
-       console.log(paid_unpaid_choices);
+       //console.log(paid_unpaid_choices);
        paid_unpaid_choices = paid_unpaid_choices.map(dropDownFunction);
-       console.log(paid_unpaid_choices);
+       //console.log(paid_unpaid_choices);
        var influencerOrProspectItems = {{ is_influencer_choices|safe }}
        influencerOrProspectItems = influencerOrProspectItems.map(dropDownFunction);
        var is_answered_choices = {{ is_answered_choices |safe }};
@@ -76,7 +76,7 @@
                            <li><a href="admin" target="_blank">Admin</a></li>
                            <li><a href="change-password">Change Pwd</a></li>
                            <li><a href="logout">LogOut</a></li>
-                           <li>Hi {{username}}</li>
+                           <li>Hi {{first_name}}</li>
 
                         </ul>
                      </div>
@@ -91,43 +91,29 @@
       </header>
 
 
-
-
       <!-- section -->
       <section class="layout_padding layer_style">
-         <!--<div class="container">
-           &lt;!&ndash; <div class="row">
-               &lt;!&ndash;<div class="col-sm-12">
-                  <div class="full text_align_center">
-                     <div class="heading_main center_head_border heading_style_1">
-                        &lt;!&ndash;<h2>All <span>Companies</span></h2>&ndash;&gt;
-                     </div>
-                  </div>
-               </div>&ndash;&gt;
-            </div>&ndash;&gt;
-         </div>-->
 
          <!--<div id="jsGrid3" ></div>-->
          <br><br>
          <div id="jsGridInfluencers"></div>
 
       </section>
-      <!-- end section -->
-      <!-- section -->
 
+      <section class="layout_padding layer_style">
 
-      <!-- end section -->
-      <!-- footer -->
-<!--      <footer class="footer_style_2">-->
+         <!--<div id="jsGrid3" ></div>-->
+         <br><br>
+         <div id="uploads">
 
+            <form action="influencers" id="influencers" method="post" enctype="multipart/form-data">
+                <input type="file" id="myfile" name="myfile"/>
+                {% csrf_token %}
+                <input type="submit"   value="Upload">
+            </form>
+         </div>
 
-<!--         &lt;!&ndash; footer bottom &ndash;&gt;-->
-<!--         <div class="footer_bottom">-->
-<!--            <p>Dessigned and developed by <strong>recoil.prahlad</strong></p>-->
-<!--         </div>-->
-<!--      </footer>-->
-      <!-- end footer -->
-      <!--=========== js section ===========-->
+      </section>
       <!-- jQuery (necessary for Bootstrap's JavaScript) -->
       <script src="static/js/jquery.min.js"></script>
       <script src="static/js/popper.min.js"></script>
@@ -202,7 +188,7 @@
             },
 
                 itemTemplate: function(value) {
-                    return new Date(value).toLocaleDateString();
+                    return value && new Date(value).toLocaleDateString();
                 },
                 insertTemplate: function(value) {
                     if(!this.inserting)
@@ -212,6 +198,7 @@
                 editTemplate: function(value) {
                     if(!this.editing)
                         return this.itemTemplate.apply(this, arguments);
+                     if(!value)return this._insertPicker = $("<input>").datepicker({ defaultDate: new Date() });
                      return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
                 },
                 insertValue: function() {
@@ -337,7 +324,7 @@
 
              fields: [
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
-                 {title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
+                 //{title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
                  {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" }},
                  {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      var domainNameIndex = value.lastIndexOf("@");
@@ -367,27 +354,77 @@
                  {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name" },
                  {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name"},
                  {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text"},
-                 {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
-                 {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center", editing: false, autosearch: true,filtering:true },
+                 {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center",inserting: false, editing: false, autosearch: true,filtering:true },
+                 {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center",inserting:false, editing: false, autosearch: true,filtering:true },
                  {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name" },
                  {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false},
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
                  {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
-                 {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
-                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:false,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by" },
+                 {name: "created_at", title: influencerFieldsDict.created_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
+
+                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by" },
+                 {name: "updated_at", title: influencerFieldsDict.updated_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
+
                  {type: "control" }
              ]
 
              });
 
+    $('#influencers').submit(function(e){
+      e.preventDefault();
+      var form = $(this);
+      var files = form[0][0].files;
+      if(files.length < 1){
+        alert("Please select csv file");
+        return;
+      }
+       if(files[0].name.split(".").pop() != "csv"){
+           alert("Please select csv file only");
+           return;
+       }
+       form[0][2].disabled=true;
+       $.ajax({
+           data: new FormData(form[0]),
+           processData: false,
+           contentType: false,
+           url: form.attr('action'),
+           method: form.attr('method'),
+           success: function(response){
+               var duplicates = response.duplicates;
+               var createdCount = response.createdCount;
+               console.log("after succes");
+               if(duplicates && duplicates.length > 0){
+                /*
+                   create modal window ,and pass leads created number till now.
+                   let model window be submitted, with labels of data and radio buttons.
+                   Once the window is submitted, as the response of the submission,
+                   once that is submitted , put the final count into view.
 
+                */
+                form[0][2].disabled=false;
+                form[0].reset();
+                handleDuplicates(createdCount, duplicates);
 
+               }else{
+                   alert(createdCount+" Lead(s) have been created");
+                   loadGrid($('#influencers'));
+
+               }
+           },
+           error: function(response){
+               alert(response.statusText);
+           },
+
+           complete: function(data){
+               form[0][2].disabled=false;
+               form[0].reset();
+           }
+       });
+
+});
 
         });
      </script>
-
-
-
    </body>
 </html>
