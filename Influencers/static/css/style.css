@@ -541,6 +541,9 @@ a:focus {
     text-align: center;
 }
 
+.showUploading{
+}
+
 .center {
     width: 100%;
     display: flex;

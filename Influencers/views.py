@@ -246,10 +246,17 @@ class Influencers(BaseView):
                         value = None
                         if "_on" in field.attname:
                             value = datetime.fromisoformat(row[field.verbose_name]).date()
+
+                        elif field.get_internal_type() in ['FloatField','IntegerField']:
+                            _value = row[field.verbose_name].replace(",","").replace("kr","").replace(" ","")
+                            logger.info("value is {0}".format(_value))
+                            if _value:
+                                value = _value
                         else:
                             value = row[field.verbose_name]
-                        model.__setattr__(field.attname, value)
                         logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
+                        model.__setattr__(field.attname, value)
+
                 model.created_by = request.user
                 model.updated_by = request.user
                 model.save()

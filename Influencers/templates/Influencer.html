@@ -113,9 +113,12 @@
                <form action="influencers" id="influencers" method="post" enctype="multipart/form-data">
                    <input type="file" id="myfile" name="myfile"/>
                    {% csrf_token %}
+                   <br><br>
                    <input type="submit"   value="Upload">
                </form>
             </div>
+         </div>
+         <div class="container showUploading">
          </div>
       </section>
       <!-- jQuery (necessary for Bootstrap's JavaScript) -->
@@ -389,7 +392,7 @@
            return;
        }
        form[0][2].disabled=true;
-       form.parent().attr("id", "status");
+       $(".showUploading").attr("id","status");
        $.ajax({
            data: new FormData(form[0]),
            processData: false,
@@ -430,7 +433,7 @@
            complete: function(data){
                form[0][2].disabled=false;
                form[0].reset();
-               form.parent().attr("id", "");
+               $(".showUploading").attr("id","");
            }
        });
 
