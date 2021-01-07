@@ -121,6 +121,15 @@ h5 {
     font-size: 14px
 }
 
+.notice {
+    font-size:17px;
+
+}
+
+.notice > a {
+    color: #1e72bc !important;
+}
+
 h1 a,
 h2 a,
 h3 a,

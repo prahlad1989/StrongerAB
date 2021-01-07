@@ -60,6 +60,7 @@
            $grid.jsGrid("option","pageIndex",1);
            $grid.jsGrid("loadData");
        }
+
    </script>
       <!-- header -->
       <header class="header header_style1">
@@ -70,9 +71,9 @@
                   <div class="main_menu float-right">
                      <div class="menu">
                         <ul class="clearfix">
-                           <li class="active"><a href="all_influencers">Influencers</a></li>
+                           <li class="active"><a href="#all_influencers">Influencers</a></li>
                            <li><a href="reports.html">Reports</a></li>
-                           <li><a href="upload.html">Upload</a></li>
+                           <li><a href="#importFunction">Upload</a></li>
                            <li><a href="admin" target="_blank">Admin</a></li>
                            <li><a href="change-password">Change Pwd</a></li>
                            <li><a href="logout">LogOut</a></li>
@@ -92,7 +93,7 @@
 
 
       <!-- section -->
-      <section class="layout_padding layer_style">
+      <section class="layout_padding layer_style" id="all_influencers">
 
          <!--<div id="jsGrid3" ></div>-->
          <br><br>
@@ -100,19 +101,22 @@
 
       </section>
 
-      <section class="layout_padding layer_style">
+      <section class="layout_padding layer_style" id="importFunction">
 
          <!--<div id="jsGrid3" ></div>-->
          <br><br>
-         <div id="uploads">
+         <div class="container text_align_center" >
+            <div class="notice">Please upload csv file with the format similar to <a href="https://docs.google.com/spreadsheets/d/1YOWGGTQytCGnUJzWrpvG6A4a6CFYbiGh26TTR65Vj2E/edit#gid=300405385" target="_blank">here</a></div>
+            <br>
+            <div name="uploads">
 
-            <form action="influencers" id="influencers" method="post" enctype="multipart/form-data">
-                <input type="file" id="myfile" name="myfile"/>
-                {% csrf_token %}
-                <input type="submit"   value="Upload">
-            </form>
+               <form action="influencers" id="influencers" method="post" enctype="multipart/form-data">
+                   <input type="file" id="myfile" name="myfile"/>
+                   {% csrf_token %}
+                   <input type="submit"   value="Upload">
+               </form>
+            </div>
          </div>
-
       </section>
       <!-- jQuery (necessary for Bootstrap's JavaScript) -->
       <script src="static/js/jquery.min.js"></script>
@@ -139,6 +143,7 @@
       <!-- google map js -->
 
       <script src="static/js/db.js"></script>
+
 
 
       <!-- end google map js -->
@@ -327,9 +332,7 @@
                  //{title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
                  {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" }},
                  {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
-                     var domainNameIndex = value.lastIndexOf("@");
-                     if(domainNameIndex == -1) return value;
-                     else return value.substring(0,domainNameIndex)} },
+                     return item.created_by__first_name +" "+ item.created_by__last_name; } },
 
                  {name: "email", title: influencerFieldsDict.email, type: "text", validate: "required", validate:
                   {
@@ -363,7 +366,9 @@
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
                  {name: "created_at", title: influencerFieldsDict.created_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
 
-                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by" },
+                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
+                  return item.updated_by__first_name +" "+ item.updated_by__last_name;
+                 } },
                  {name: "updated_at", title: influencerFieldsDict.updated_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
 
                  {type: "control" }
@@ -384,6 +389,7 @@
            return;
        }
        form[0][2].disabled=true;
+       form.parent().attr("id", "status");
        $.ajax({
            data: new FormData(form[0]),
            processData: false,
@@ -404,25 +410,61 @@
                 */
                 form[0][2].disabled=false;
                 form[0].reset();
-                handleDuplicates(createdCount, duplicates);
+
 
                }else{
-                   alert(createdCount+" Lead(s) have been created");
-                   loadGrid($('#influencers'));
+                   alert(createdCount+" Record(s) have been created");
+                   loadGrid($('#jsGridInfluencers'));
 
                }
            },
            error: function(response){
-               alert(response.statusText);
+               if(response.responseJSON){
+                  alert(response.responseJSON.error);
+               }else{
+                  alert(response.statusText);
+               }
+
            },
 
            complete: function(data){
                form[0][2].disabled=false;
                form[0].reset();
+               form.parent().attr("id", "");
            }
        });
 
 });
+
+      menuList = $("a[href='#importFunction'] , a[href='#all_influencers']");
+       menuList.each(function(){
+         if(this.hash != "#all_influencers"){
+            $(this.hash).hide();
+         }
+       });
+
+       menuList.click(function(e){
+                e.preventDefault();
+                hashValue = this.hash;
+           menuList.each(function(){
+            if(this.hash == hashValue){
+               $(this.hash).show();
+               $(this).parent().addClass("active");
+            }else{
+               $(this.hash).hide();
+               $(this).parent().removeClass("active");
+            }
+           });
+           /*if(this.hash == "#importFunction"){
+            $("#all_influencers").hide();
+            $("#importFunction").show();
+           }
+           else if(this.hash == "#all_influencers" || this.hash == "#file_upload_b2b"){
+            $("#importFunction").hide();
+             $("#all_influencers").show();
+           }
+           $('html,body').animate({scrollTop: $(this.hash).offset().top-100},'slow'); */
+        });
 
         });
      </script>

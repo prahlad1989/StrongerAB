@@ -38,7 +38,8 @@ urlpatterns = [
     path('login', auth_views.LoginView.as_view(template_name="login.html", redirect_field_name="all_influencers")),
     path('accounts/', include('django.contrib.auth.urls')),
     path('logout', auth_views.LogoutView.as_view()),
-    path('usernames',views.getUserNames,name='getUserNames')
+    path('usernames',views.getUserNames,name='getUserNames'),
+    path('updateCentraOrders', views.OrderUpdatesView.as_view(), name='updateCentraOrders')
 
 
 

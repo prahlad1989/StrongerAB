@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from StrongerAB1.settings import portals as portal_choices, is_influencer_choices
-from StrongerAB1.settings import response_choices,paid_unpaid_choices,influencer_post_status, is_answered_choices
+from StrongerAB1.settings import paid_unpaid_choices,influencer_post_status, is_answered_choices
 
 
 
@@ -42,11 +42,11 @@ class Influencer(InfluencerBase):
     commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
     revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True)
-    revenue_click = models.FloatField( verbose_name='Revenue Click', null=True)
+    revenue_click = models.FloatField( verbose_name='Revenue Click', null=True, default=0)
     #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
-    is_old_order = models.BooleanField(default=False, verbose_name='Is Old Order?')
+    is_old_order = models.BooleanField(default=False,null=True, verbose_name='Is Old Order?')
 
     class Meta:
         indexes = [models.Index(fields=['email','channel_username', '-valid_from'])]

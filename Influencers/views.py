@@ -25,9 +25,8 @@ from Influencers.forms import LoginForm, InfluencerForm
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants
 from Influencers.tasks import demo_task
 
-from StrongerAB1.settings import LEADSPAN, ADMINSPAN, response_choices, influencer_post_status, paid_unpaid_choices, \
+from StrongerAB1.settings import LEADSPAN, ADMINSPAN, influencer_post_status, paid_unpaid_choices, \
     is_influencer_choices, is_answered_choices
-from StrongerAB1.settings import portals as portal_choices
 from StrongerAB1.settings import adminMsg
 from StrongerAB1.settings import b2b_mandatory_fields
 from StrongerAB1.settings import influencer_mandatory_fields
@@ -133,7 +132,6 @@ class BaseView(View):
             return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
 
         for field in itemFromDB._meta.fields:
-
             if field.name in item and "_on" in field.name:
                 date = datetime.fromtimestamp(item[field.name]).date()
                 itemFromDB.__setattr__(field.name, date)
@@ -141,7 +139,7 @@ class BaseView(View):
             elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr']:
                 #print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
-        itemFromDB.update_by = request.user
+        itemFromDB.updated_by = request.user
         itemFromDB.save()
         logger.info(
             "Record with influencer name {1} updated by user {0}".format(request.user.get_username(),
@@ -174,7 +172,7 @@ class OrderUpdatesView(BaseView):
 
     def get(self,request, *args, **kwargs):
         logger.info("updated orders with discount coupon related info")
-        centraOrdersUpdate(request)
+        centraOrdersUpdate(message="Centra orders update")
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 
@@ -204,6 +202,7 @@ class Influencers(BaseView):
         mandatoryFields = influencer_mandatory_fields
         index = 0
         messages = []
+        emailValidationRE = "^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$"
         for row in rows:
 
             index += 1
@@ -212,13 +211,22 @@ class Influencers(BaseView):
                     messages.append(key + " is mandatory at row: {0};\n".format(index))
                 if key == 'Email':
                     try:
-                        email_validator.validate_email(value)
+
+                        match = re.match(emailValidationRE,value)
+                        if not match:
+                            raise email_validator.EmailNotValidError("Not a proper email format")
                     except email_validator.EmailNotValidError as err:
-                        messages.append(key + "  "+value+" is not valid at row: {0};\n".format(index))
+                        messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
+                elif "date" in key.lower():
+                    try:
+                        test = value = datetime.fromisoformat(value).date()
+                    except Exception as e:
+                        messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
             except ValidationError as  err:
+                logger.error(err.messages)
                 return JsonResponse({"error": err.messages}, status=500)
 
         emailsInRows = map(lambda x: x['Email'], rows)
@@ -243,6 +251,7 @@ class Influencers(BaseView):
                         model.__setattr__(field.attname, value)
                         logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
                 model.created_by = request.user
+                model.updated_by = request.user
                 model.save()
                 createdLeadsCount += 1
 
@@ -259,7 +268,6 @@ class Influencers(BaseView):
 @login_required()
 def index(request):
     context = dict()
-    context['portal_choices'] = json.dumps(list(map(lambda x: x[0], portal_choices)))
     countries = Constants.objects.filter(Q(key='countries')).values('value')[0]['value']
     context['countries'] = countries
     collections = Constants.objects.filter(Q(key='collections')).values('value')[0]['value']
@@ -280,7 +288,6 @@ def index(request):
 @login_required()
 def allInfluencers(request):
     context = dict()
-    context['portal_choices'] = json.dumps(list(map(lambda x: x[0], portal_choices)))
     countries = Constants.objects.filter(Q(key='countries')).values('value')[0]['value']
     context['list_of_countries'] = countries
     collections = Constants.objects.filter(Q(key='collections')).values('value')[0]['value']
@@ -330,8 +337,12 @@ def leadToDict(x):
     item = model_to_dict(x, fields=[field.name for field in x._meta.fields])
     item['created_at'] = x.created_at
     item['updated_at'] = x.updated_at
-    item['created_by__username'] = x.created_by.username
+    item['updated_by__username'] = x.created_by.username
     item['updated_by__username'] = x.updated_by.username
+    item['created_by__first_name'] = x.created_by.first_name
+    item['created_by__last_name'] = x.created_by.last_name
+    item['updated_by__first_name'] = x.updated_by.first_name
+    item['updated_by__last_name'] = x.updated_by.last_name
     return item
 
 
@@ -356,6 +367,8 @@ class InfluencersQuery(View):
     fields_in_response = ('id',
                           InfluencerModel.is_influencer.field_name,
                           'created_by__username',
+                          'created_by__first_name',
+                          'created_by__last_name',
                           'created_by__id',
                           InfluencerModel.email.field_name,
                           InfluencerModel.is_answered.field_name,
@@ -440,68 +453,4 @@ class InfluencersQuery(View):
 
 
 
-
-# class B2BLead(Lead):
-#     def getModel(self):
-#         return B2BLeadModel
-#
-#     model = B2BLeadModel
-#     duplicateCheckField = 'email'
-#
-#     def getForm(self, request):
-#         return B2BLeadForm(request.POST)
-#     #
-#     # def put(self, request, *args, **kwargs):
-#     #     lead = json.loads(request.body)
-#     #     id = lead['id']
-#     #     leadFromDB = self.getModel().objects.get(pk=id)
-#     #     if leadFromDB.created_by_id != request.user.pk and not request.user.is_staff:
-#     #         return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
-#     #     if datetime.now(timezone.utc) - leadFromDB.created_at > timedelta(
-#     #             1) and not request.user.is_staff:
-#     #         return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
-#     #
-#     #     for field in leadFromDB._meta.fields:
-#     #         if field.name in lead and not field.name in ['created_by']:
-#     #             leadFromDB.__setattr__(field.name, lead[field.name])
-#     #     leadFromDB.save()
-#     #     logger.info(
-#     #         "lead with company name {1} updated by user {0}".format(request.user.get_username(),
-#     #                                                                 leadFromDB.company_name))
-#     #     return JsonResponse(leadToDict(leadFromDB), safe=False, status=200)
-#
-#
-# class B2BLeadsQuery(LeadsQuery):
-#     @method_decorator(login_required)
-#     def dispatch(self, request, *args, **kwargs):
-#         return super().dispatch(request, *args, **kwargs)
-#
-#     model = B2BLeadModel
-#
-#     fields_in_response = ('id', B2BLeadModel.company_name.field_name,
-#                           B2BLeadModel.full_name.field_name,
-#                           B2BLeadModel.first_name.field_name,
-#                           B2BLeadModel.last_name.field_name,
-#                           B2BLeadModel.designation.field_name,
-#                           B2BLeadModel.email.field_name,
-#                           B2BLeadModel.linkedin_id.field_name,
-#                           B2BLeadModel.position.field_name,
-#                           B2BLeadModel.job_location.field_name,
-#                           B2BLeadModel.job_posting_links.field_name,
-#                           B2BLeadModel.phone_number.field_name,
-#                           B2BLeadModel.address.field_name,
-#                           B2BLeadModel.state.field_name,
-#                           B2BLeadModel.zip_code.field_name,
-#                           B2BLeadModel.company_website.field_name,
-#                           B2BLeadModel.company_linkedin.field_name,
-#                           B2BLeadModel.is_client.field_name,
-#                           B2BLeadModel.is_dnd.field_name,
-#                           B2BLeadModel.span.field_name,
-#                           B2BLeadModel.comments.field_name,
-#                           B2BLeadModel.response.field_name,
-#                           'created_by__username',
-#                           B2BLeadModel.created_at.field_name,
-#                           B2BLeadModel.created_on.field_name)
-#
-#
 
