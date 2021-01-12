@@ -132,7 +132,7 @@ class BaseView(View):
             return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
 
         for field in itemFromDB._meta.fields:
-            if field.name in item and "_on" in field.name:
+            if field.name in item and "_on" in field.name and item[field.name]:
                 date = datetime.fromtimestamp(item[field.name]).date()
                 itemFromDB.__setattr__(field.name, date)
 

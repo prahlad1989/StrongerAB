@@ -153,6 +153,9 @@
      <script>
 
       $(function() {
+            $( document ).on( 'focus', ':input', function(){
+               $( this ).attr( 'autocomplete', 'off' );
+            });
             var originalFilterTemplate = jsGrid.fields.text.prototype.filterTemplate;
                         //console.log(originalFilterTemplate);
             jsGrid.fields.text.prototype.filterTemplate = function() {
@@ -215,7 +218,7 @@
                     return null;
                 },
                 editValue: function() {
-                    var date=this._editPicker.datepicker("getDate");
+                    var date=this._editPicker && this._editPicker.datepicker("getDate");
                     if(date) return (date.getTime())/1000;
                     return null;
                 }
@@ -367,12 +370,18 @@
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
                  {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
-                 {name: "created_at", title: influencerFieldsDict.created_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
+                 {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true,itemTemplate: function(value) {
+                    var x = new Date(value);
+                    return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
+                } },
 
-                 {name: "updated_by__username", title: "Last Updated By", type:"number", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
+                 {name: "updated_by__username", title: "Last Updated By", type:"text", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
                   return item.updated_by__first_name +" "+ item.updated_by__last_name;
                  } },
-                 {name: "updated_at", title: influencerFieldsDict.updated_at, type: "text",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true },
+                 {name: "updated_at", title: influencerFieldsDict.updated_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true, itemTemplate: function(value) {
+                    var x = new Date(value);
+                    return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
+                } },
 
                  {type: "control" }
              ]
