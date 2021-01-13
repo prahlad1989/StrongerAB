@@ -194,7 +194,7 @@ class Influencers(BaseView):
         fields = self.model._meta.get_fields()
         if request.FILES:
             csv_file = request.FILES['myfile']
-            rows = list(csv.DictReader(io.StringIO(csv_file.read().decode('ISO-8859-1'))))
+            rows = list(csv.DictReader(io.StringIO(csv_file.read().decode('utf-8'))))
         else:
             rows = json.loads(request.body)
 

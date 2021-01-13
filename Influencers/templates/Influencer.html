@@ -432,7 +432,7 @@
            },
            error: function(response){
                if(response.responseJSON){
-                  alert(response.responseJSON.error);
+                  alert(response.responseJSON.error+" "+response.statusText);
                }else{
                   alert(response.statusText);
                }
