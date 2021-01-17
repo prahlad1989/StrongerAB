@@ -10,7 +10,7 @@ from django.db.models import Q, Min
 from StrongerAB1.settings import centra_key, centra_api_url
 from Influencers.models import Influencer as Influencer, Constants
 from datetime import date, datetime, timedelta
-from time import time,sleep
+import time
 
 from jsonpath_ng import jsonpath, parse
 from django.utils import timezone
@@ -23,6 +23,12 @@ headers={'Authorization': 'Bearer '+str(centra_key),  'Content-Type': 'applicati
 class CentraUpdate:
     def update(self):
         pass
+
+    today = datetime.now(tz=timezone.utc)
+    timeFormat = "%Y-%m-%dT%H:%M:%S%z"
+    graphQlQuery =""
+    client = GraphqlClient(endpoint=centra_api_url, headers=headers)
+
 
 class OrdersUpdate(CentraUpdate):
     graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 5000, page: $pageNumber, sort: number_ASC  )
@@ -59,7 +65,7 @@ class OrdersUpdate(CentraUpdate):
                                     stopAt
                                   }
                     } """
-    client = GraphqlClient(endpoint=centra_api_url, headers=headers)
+
 
     def update(self):
        # Read all the influencers table in the last one month or read each row which have coupon code validation greater than today.
@@ -70,9 +76,8 @@ class OrdersUpdate(CentraUpdate):
 
         #select oldest coupon code which is still valid currently.
 
-        today = datetime.now(tz=timezone.utc)
-        timeFormat = "%Y-%m-%dT%H:%M:%S%z"
-        valid_till_filter = Q(valid_till__gte = today) # format to be done later
+
+        valid_till_filter = Q(valid_till__gte = self.today) # format to be done later
         query = Influencer.objects.filter(valid_till_filter).aggregate(Min('valid_from'))
         #startDate = query['valid_from__min'].date().__str__() # why needed?
         influencersList = list(Influencer.objects.filter(valid_till_filter))
@@ -82,7 +87,7 @@ class OrdersUpdate(CentraUpdate):
 
         api_query_params = {}
         api_query_params['pageNumber'] = 1
-        api_query_params["orderEndDate"] = today.strftime(timeFormat)
+        api_query_params["orderEndDate"] = self.today.strftime(self.timeFormat)
         lastProcessedOrderNum =0
         lastProcessedOrderDate=""
         lastProcessedOrder = Constants.objects.filter(key = 'lastProcessedOrder')
@@ -99,7 +104,7 @@ class OrdersUpdate(CentraUpdate):
             lastProcessedOrderNum =0
             api_query_params['orderStartDate']= lastProcessedOrderDate = centra_api_start_date
 
-        tic= time()
+        tic= time.time()
         while True:
 
             resp = client.execute(query=graphQlQuery, variables=api_query_params)
@@ -130,14 +135,15 @@ class OrdersUpdate(CentraUpdate):
                                     eachObj.revenue_click += revenueGenerated
                                     logger.info("revenue click generated for coupon{0} is {1}".format(coupon, revenueGenerated))
                                     eachObj.save()
+                            else:
+                                logger.info("our coupon not found in order {0}".format(order['number']))
                         except Exception as e:
                             logger.error("error with object{0} ".format(eachObj))
                             logger.exception(e)
-                    else:
-                        print("coupon not found in order {0}".format(order['number']))
+
                 else:
                     logger.info("no coupon codes in order {0}".format(order))
-            logger.error("time taken for {0} number of orders orders {1}".format(len(orders),int(time()-tic)))
+            logger.info("time taken for {0} number of orders orders {1}".format(len(orders),int(time()-tic)))
             if orders :
                 api_query_params['pageNumber'] = api_query_params['pageNumber']+1
                 logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
@@ -154,20 +160,81 @@ class OrdersUpdate(CentraUpdate):
             else:
                 logger.info("processed all orders. Done for now")
                 break
-        logger.error("time taken for total orders in a day orders orders {0}".format((time()-tic)/1000))
+        logger.error("time taken for total orders in a day orders orders {0}".format(int(time()-tic)))
 
 
 
-@background(schedule=60*5)
+@background(schedule=60*1)
 def centraOrdersUpdate(message):
-    logger.info('ordersupdate started')
+    logger.info('initiated ordersupdate thread ')
 
     ordersUpdate  = OrdersUpdate()
     while True:
         logger.debug("order update started at {0}".format(datetime.utcnow()))
         ordersUpdate.update()
-        logger.debug("order update done at {0}".format(datetime.utcnow()))
-        sleep(60*5)
+        logger.debug("order update completed at {0}".format(datetime.utcnow()))
+        time.sleep(60*5)
+
+
+class CouponValidationUpdate(CentraUpdate):
+    graphQlQuery = """ query($couponCode: [String!]){
+                        discounts(where:{code: $couponCode}){
+                        id
+                        status
+                        code
+                        startAt
+                        stopAt
+
+                        }
+                        } """
+
+    def update(self):
+        influencersList = Influencer.objects.filter(
+            ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None)).filter(
+            Q(valid_from=None) & Q(valid_till=None))
+        logger.info("influencersList length {0} ".format(len(influencersList)))
+        graphQlQuery = self.graphQlQuery
+        client = self.client
+
+        api_query_params = {}
+        tic = time.time()
+
+        for eachObj in influencersList:
+            try:
+                coupon = eachObj.discount_coupon
+                api_query_params['couponCode'] = coupon
+                resp = client.execute(query=graphQlQuery, variables=api_query_params)
+                coupons = resp["data"]["discounts"]
+                if coupons:
+                    coupon_from_api = coupons[0]
+                    logger.info("coupon details are {0}".format(coupon_from_api))
+                    eachObj.valid_from = datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
+                        timezone.utc)
+                    eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
+                        timezone.utc)
+                    logger.info("copon: {0},start time: {1}, and end time: {2}".format(coupon, eachObj.valid_from,
+                                                                                       eachObj.valid_till))
+                    eachObj.save()
+
+            except Exception as e:
+                logger.error("error with object{0} ".format(eachObj))
+                logger.exception(e)
+
+        logger.info("time taken for total coupon updates {0}".format((int(time.time() - tic))))
+
+
+@background(schedule=60*1)
+def valiationsUpdate(message):
+    logger.info('initiated coupon validations thread')
+    couponValidationUpdate  = CouponValidationUpdate()
+    while True:
+        logger.debug("coupon validations started at {0}".format(datetime.utcnow()))
+        couponValidationUpdate.update()
+        logger.debug("coupon validations completed at {0}".format(datetime.utcnow()))
+        time.sleep(60*5)
+
+
+
 
 @background(schedule=100)
 def centraCouponsUpdate(message):

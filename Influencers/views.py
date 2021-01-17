@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from Influencers.forms import LoginForm, InfluencerForm
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants
-from Influencers.tasks import demo_task
+from Influencers.tasks import demo_task, valiationsUpdate
 
 from StrongerAB1.settings import LEADSPAN, ADMINSPAN, influencer_post_status, paid_unpaid_choices, \
     is_influencer_choices, is_answered_choices
@@ -175,6 +175,12 @@ class OrderUpdatesView(BaseView):
         centraOrdersUpdate(message="Centra orders update")
         return JsonResponse({"will be updated in an hour":True},status=200)
 
+class ValidationUpdatesView(OrderUpdatesView):
+    def get(self,request, *args,**kwargs):
+        logger.info("updating influencers with discount coupon related info")
+        valiationsUpdate(message="Centra coupon validations update")
+        return JsonResponse({"coupon codes be updated in an hour":True},status=200)
+
 
 
 
@@ -211,13 +217,12 @@ class Influencers(BaseView):
                     messages.append(key + " is mandatory at row: {0};\n".format(index))
                 if key == 'Email':
                     try:
-
                         match = re.match(emailValidationRE,value)
                         if not match:
                             raise email_validator.EmailNotValidError("Not a proper email format")
                     except email_validator.EmailNotValidError as err:
                         messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
-                elif "date" in key.lower():
+                elif "date" in key.lower() or "day" in key.lower():
                     try:
                         test = value = datetime.fromisoformat(value).date()
                     except Exception as e:
@@ -266,9 +271,6 @@ class Influencers(BaseView):
         statusJSON['duplicates'] = duplicates
         statusJSON['createdCount'] = createdLeadsCount
         return JsonResponse(statusJSON, safe=False, status=201)
-
-
-
 
 
 
