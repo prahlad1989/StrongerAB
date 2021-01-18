@@ -233,7 +233,7 @@ class Influencers(BaseView):
                             raise email_validator.EmailNotValidError("Not a proper email format")
                     except email_validator.EmailNotValidError as err:
                         messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
-                elif "date" in key.lower() or "day" in key.lower():
+                elif "date" in key.lower() or "day" in key.lower() and value.strip():
                     try:
                         test = value = datetime.fromisoformat(value).date()
                     except Exception as e:
@@ -251,32 +251,35 @@ class Influencers(BaseView):
         duplicates = []
         createdLeadsCount = 0
         statusJSON = dict()
-        with transaction.atomic():
-            fields = self.model._meta.get_fields()
-            for row in reversed(rows):
-                model = self.model()
-                for field in fields:
-                    if field.verbose_name in row and row[field.verbose_name].strip():
-                        value = None
-                        if "_on" in field.attname:
-                            value = datetime.fromisoformat(row[field.verbose_name]).date()
+        try:
+            with transaction.atomic():
+                fields = self.model._meta.get_fields()
+                for row in reversed(rows):
+                    model = self.model()
+                    for field in fields:
+                        if field.verbose_name in row and row[field.verbose_name].strip():
+                            value = None
+                            if "_on" in field.attname:
+                                value = datetime.fromisoformat(row[field.verbose_name]).date()
 
-                        elif field.get_internal_type() in ['FloatField','IntegerField']:
-                            _value = row[field.verbose_name].replace(",","").replace("kr","").replace(" ","")
-                            logger.info("value is {0}".format(_value))
-                            if _value:
-                                value = _value
-                        else:
-                            value = row[field.verbose_name]
-                        logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
-                        model.__setattr__(field.attname, value)
+                            elif field.get_internal_type() in ['FloatField','IntegerField']:
+                                _value = row[field.verbose_name].replace(",","").replace("kr","").replace(" ","")
+                                #logger.info("value is {0}".format(_value))
+                                if _value:
+                                    value = _value
+                            else:
+                                value = row[field.verbose_name]
+                            #logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
+                            model.__setattr__(field.attname, value)
 
-                model.created_by = request.user
-                model.updated_by = request.user
-                model.updated_at = datetime.now()
-                model.save()
-                createdLeadsCount += 1
-
+                    model.created_by = request.user
+                    model.updated_by = request.user
+                    model.updated_at = datetime.now()
+                    model.save()
+                    createdLeadsCount += 1
+        except Exception as e:
+            logger.error(e.__str__())
+            return JsonResponse({"error": e.__str__()}, status=500)
         duplicates.reverse()
         statusJSON['duplicates'] = duplicates
         statusJSON['createdCount'] = createdLeadsCount
