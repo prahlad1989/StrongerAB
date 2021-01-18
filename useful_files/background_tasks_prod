@@ -1,0 +1,10 @@
+#!/bin/bash
+DJANGODIR=/var/www/yoursite/StrongerAB
+cd $DJANGODIR
+source venv/bin/activate
+
+#kills and creates new tasks
+curl  http://localhost:80/updateCentraValidations
+#curl  http://localhost:80/updateCentraOrders
+#start running scheduled tasks
+exec python manage.py process_tasks
