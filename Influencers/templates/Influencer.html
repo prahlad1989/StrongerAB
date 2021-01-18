@@ -382,6 +382,13 @@
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
                 } },
+                {name: "centra_update_at", title: influencerFieldsDict.centra_update_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true, itemTemplate: function(value) {
+                    if(!value) return "";
+                    var x = new Date(value);
+                    return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
+                } },
+
+                {name: "is_old_record", type: "checkbox", title:influencerFieldsDict.is_old_record, visible: true, inserting: true, editing: true},
 
                  {type: "control" }
              ]

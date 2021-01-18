@@ -9,7 +9,8 @@ class InfluencerBase(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='created_by_user')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='updated_by_user')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Updated At')
+    updated_at = models.DateTimeField(verbose_name='Updated At',default=None, blank=True, null=True )
+    centra_update_at = models.DateTimeField(verbose_name='Centra Update At', blank=True,null=True)
     class Meta:
         ordering = ["-created_at", "-updated_at"]
         indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
@@ -46,7 +47,7 @@ class Influencer(InfluencerBase):
     #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
-    is_old_order = models.BooleanField(default=False,null=True, verbose_name='Is Old Order?')
+    is_old_record = models.BooleanField(default=False,null=True, verbose_name='Is Old Record?')
 
     class Meta:
         indexes = [models.Index(fields=['email','channel_username', '-valid_from'])]

@@ -27,13 +27,13 @@ class ValidationUpdateTest(TestCase):
     def setUp(self):
 
         Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India',
-                                  influencer_name='test_name1', discount_coupon=None,
+                                  influencer_name='Welcome10', discount_coupon="Welcome10",
                                   valid_from=None,
-                                  valid_till=None)
+                                  valid_till=None, is_old_record=False)
 
         Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India',
                                   influencer_name='test_name1',
-                                  discount_coupon="   ", valid_from=None,
+                                  discount_coupon="dfasd   ", valid_from=None,
                                   valid_till=None)
         Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India',
                                   influencer_name='test_name1',
@@ -41,7 +41,9 @@ class ValidationUpdateTest(TestCase):
                                   valid_till=timezone.now() + timedelta(10))
 
     def testNonEmptyCoupons(self):
-        influencerList = Influencer.objects.filter(~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon =None))
+        influencerList = Influencer.objects.filter(
+            ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
+            Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False))
         print("length {0}".format(len(influencerList)))
         self.assertTrue(len(influencerList)==1,"filtered properly")
 

@@ -35,6 +35,7 @@ class OrdersUpdate(CentraUpdate):
                     { orderDate
                      number 
                      createdAt
+                     currencyBaseRate
                      status 
                      grandTotal{ 
                         ...monetary }
@@ -118,7 +119,6 @@ class OrdersUpdate(CentraUpdate):
                 values = expr.find(order)
                 values = list(map(lambda x: x.value, values))
                 if values:
-
                     logger.info("coupon codes in order#{0} are {1}".format(order['number'], values))
                     #influencersList = Influencer.objects.filter(valid_till_filter)
 
@@ -127,13 +127,14 @@ class OrdersUpdate(CentraUpdate):
                             coupon = eachObj.discount_coupon
                             if coupon and coupon in values:
                                 # logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3}", coupon, "created", order['number'], order['grandTotal']['value'])
-                                logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3}".format(
-                                coupon, "created", order['number'], order['grandTotal']['value']))
-                                revenueGenerated = order['grandTotal']['value']
+                                logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3} with currency{4} with exchange rate{5}".format(
+                                coupon, "created", order['number'], order['grandTotal']['value'], order['grandTotal']['currency']['code'], order['currencyBaseRate']))
+                                revenueGenerated = order['grandTotal']['value'] * order['currencyBaseRate']
                                 logger.info("previous revenue of coupon{0} is {1} ".format(coupon,eachObj.revenue_click))
                                 if revenueGenerated:
                                     eachObj.revenue_click += revenueGenerated
                                     logger.info("revenue click generated for coupon{0} is {1}".format(coupon, revenueGenerated))
+                                    eachObj.centra_update_at = datetime.now()
                                     eachObj.save()
                             else:
                                 logger.info("our coupon not found in order {0}".format(order['number']))
@@ -166,15 +167,18 @@ class OrdersUpdate(CentraUpdate):
 
 @background(schedule=60*1)
 def centraOrdersUpdate(message):
-    logger.info('initiated ordersupdate thread ')
+    logger.info('initiated ordersupdate thread: ')
 
     ordersUpdate  = OrdersUpdate()
     while True:
-        logger.debug("order update started at {0}".format(datetime.utcnow()))
-        ordersUpdate.update()
-        logger.debug("order update completed at {0}".format(datetime.utcnow()))
-        time.sleep(60*5)
-
+        try:
+            logger.debug("order update started at {0}".format(datetime.utcnow()))
+            ordersUpdate.update()
+            logger.debug("order update completed at {0}".format(datetime.utcnow()))
+            time.sleep(60*5)
+        except Exception as e:
+            logger.error(e.__str__())
+            logger.exception(e)
 
 class CouponValidationUpdate(CentraUpdate):
     graphQlQuery = """ query($couponCode: [String!]){
@@ -190,12 +194,11 @@ class CouponValidationUpdate(CentraUpdate):
 
     def update(self):
         influencersList = Influencer.objects.filter(
-            ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None)).filter(
-            Q(valid_from=None) & Q(valid_till=None))
+            ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
+            Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False))
         logger.info("influencersList length {0} ".format(len(influencersList)))
         graphQlQuery = self.graphQlQuery
         client = self.client
-
         api_query_params = {}
         tic = time.time()
 
@@ -207,12 +210,13 @@ class CouponValidationUpdate(CentraUpdate):
                 coupons = resp["data"]["discounts"]
                 if coupons:
                     coupon_from_api = coupons[0]
-                    logger.info("coupon details are {0}".format(coupon_from_api))
+                    logger.debug("coupon details are {0}".format(coupon_from_api))
                     eachObj.valid_from = datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
                         timezone.utc)
                     eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
                         timezone.utc)
-                    logger.info("copon: {0},start time: {1}, and end time: {2}".format(coupon, eachObj.valid_from,
+                    eachObj.centra_update_at = datetime.now()
+                    logger.debug("copon: {0},start time: {1}, and end time: {2}".format(coupon, eachObj.valid_from,
                                                                                        eachObj.valid_till))
                     eachObj.save()
 
@@ -228,11 +232,14 @@ def valiationsUpdate(message):
     logger.info('initiated coupon validations thread')
     couponValidationUpdate  = CouponValidationUpdate()
     while True:
-        logger.debug("coupon validations started at {0}".format(datetime.utcnow()))
-        couponValidationUpdate.update()
-        logger.debug("coupon validations completed at {0}".format(datetime.utcnow()))
-        time.sleep(60*5)
-
+        try:
+            logger.info("coupon validations started at {0}".format(datetime.utcnow()))
+            couponValidationUpdate.update()
+            logger.info("coupon validations completed at {0}".format(datetime.utcnow()))
+            time.sleep(60*5)
+        except Exception as e:
+            logger.error(e.__str__())
+            logger.exception(e)
 
 
 

@@ -24,6 +24,7 @@ from django.views.generic import TemplateView
 from Influencers.forms import LoginForm, InfluencerForm
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants
 from Influencers.tasks import demo_task, valiationsUpdate
+from background_task.models import Task
 
 from StrongerAB1.settings import LEADSPAN, ADMINSPAN, influencer_post_status, paid_unpaid_choices, \
     is_influencer_choices, is_answered_choices
@@ -114,6 +115,7 @@ class BaseView(View):
             object.is_duplicate = True
         object.created_by = request.user
         object.updated_by = request.user
+        object.updated_at = datetime.now()
         object.save()
         logger.info(
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
@@ -140,6 +142,7 @@ class BaseView(View):
                 #print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
         itemFromDB.updated_by = request.user
+        itemFromDB.updated_at = datetime.now()
         itemFromDB.save()
         logger.info(
             "Record with influencer name {1} updated by user {0}".format(request.user.get_username(),
@@ -165,23 +168,31 @@ class CollectionsUpdate(CentraUpdate):
     def update(self):
         pass
 
+
+
+
 class OrderUpdatesView(BaseView):
+    def deleteTasks(self, name):
+        existing_tasks = Task.objects.all().filter(task_name=name).delete()
+        logger.info(existing_tasks[0])
+        logger.info("deleted {0} existing tasks with name {1}".format( existing_tasks[0],name))
+
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self,request, *args, **kwargs):
         logger.info("updated orders with discount coupon related info")
+        self.deleteTasks("Influencers.tasks.centraOrdersUpdate")
         centraOrdersUpdate(message="Centra orders update")
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 class ValidationUpdatesView(OrderUpdatesView):
     def get(self,request, *args,**kwargs):
-        logger.info("updating influencers with discount coupon related info")
+        logger.info("updating influencers with discount coupon related info{0}".format(datetime.now()))
+        self.deleteTasks("Influencers.tasks.valiationsUpdate")
         valiationsUpdate(message="Centra coupon validations update")
         return JsonResponse({"coupon codes be updated in an hour":True},status=200)
-
-
 
 
 class InfluencerView(BaseView):
@@ -243,8 +254,6 @@ class Influencers(BaseView):
         with transaction.atomic():
             fields = self.model._meta.get_fields()
             for row in reversed(rows):
-                matchedDBLead = None
-
                 model = self.model()
                 for field in fields:
                     if field.verbose_name in row and row[field.verbose_name].strip():
@@ -264,6 +273,7 @@ class Influencers(BaseView):
 
                 model.created_by = request.user
                 model.updated_by = request.user
+                model.updated_at = datetime.now()
                 model.save()
                 createdLeadsCount += 1
 
@@ -402,8 +412,10 @@ class InfluencersQuery(View):
                           InfluencerModel.revenue_analysis.field_name,
                           InfluencerModel.revenue_click.field_name,
                           InfluencerModel.comments.field_name,
+                          InfluencerModel.is_old_record.field_name,
                           InfluencerModel.created_at.field_name,
                           InfluencerModel.updated_at.field_name,
+                          InfluencerModel.centra_update_at.field_name,
                           "updated_by__username", "updated_by__first_name",  "updated_by__last_name")
 
     def getQueryParams(self, request):
@@ -459,7 +471,3 @@ class InfluencersQuery(View):
         records = query.values(*self.fields_in_response)[offSet:limitEnds]
         recordsJSON = {"data": list(records), "itemsCount": count}
         return JsonResponse(recordsJSON, safe=False, status=200)
-
-
-
-

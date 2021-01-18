@@ -25,7 +25,7 @@ SECRET_KEY = '6pl(ljdspnr)!2_jk^--_%t8at2#9qg+gm3k$6q@j@1l(8o20+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0']
+ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0','localhost']
 
 # Application definition
 LOGGING = {
@@ -80,8 +80,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'background_task',
     'Influencers',
-
-
 ]
 
 MIDDLEWARE = [
@@ -167,6 +165,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+BACKGROUND_TASK_RUN_ASYNC = True
 
 
 # Static files (CSS, JavaScript, Images)

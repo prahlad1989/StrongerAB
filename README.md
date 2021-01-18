@@ -134,4 +134,6 @@ You don't have touch any other files, restart any other servers.
 FYI . Just look at the history of the commands in the server.
 
 
-
+### Handling tasks scheduling
+After the deployment, restart tasks 
+run command "python manage.py process_tasks"
