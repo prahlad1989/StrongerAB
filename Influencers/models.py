@@ -43,7 +43,7 @@ class Influencer(InfluencerBase):
     commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
     revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True)
-    revenue_click = models.FloatField( verbose_name='Revenue Click', null=True, default=0)
+    revenue_click = models.FloatField( verbose_name='Revenue Qlik', null=True, default=0)
     #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
     comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')

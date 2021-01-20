@@ -134,7 +134,7 @@ class OrdersUpdate(CentraUpdate):
                                 if revenueGenerated:
                                     eachObj.revenue_click += revenueGenerated
                                     logger.info("revenue click generated for coupon{0} is {1}".format(coupon, revenueGenerated))
-                                    eachObj.centra_update_at = datetime.now()
+                                    eachObj.centra_update_at = datetime.now(tz=timezone.utc)
                                     eachObj.save()
                             else:
                                 logger.info("our coupon not found in order {0}".format(order['number']))
@@ -215,7 +215,7 @@ class CouponValidationUpdate(CentraUpdate):
                         timezone.utc)
                     eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
                         timezone.utc)
-                    eachObj.centra_update_at = datetime.now()
+                    eachObj.centra_update_at = datetime.now(tz=timezone.utc)
                     logger.debug("copon: {0},start time: {1}, and end time: {2}".format(coupon, eachObj.valid_from,
                                                                                        eachObj.valid_till))
                     eachObj.save()
@@ -231,15 +231,14 @@ class CouponValidationUpdate(CentraUpdate):
 def valiationsUpdate(message):
     logger.info('initiated coupon validations thread')
     couponValidationUpdate  = CouponValidationUpdate()
-    while True:
-        try:
-            logger.info("coupon validations started at {0}".format(datetime.utcnow()))
-            couponValidationUpdate.update()
-            logger.info("coupon validations completed at {0}".format(datetime.utcnow()))
-            time.sleep(60*5)
-        except Exception as e:
-            logger.error(e.__str__())
-            logger.exception(e)
+
+    try:
+        logger.info("coupon validations started at {0}".format(datetime.utcnow()))
+        couponValidationUpdate.update()
+        logger.info("coupon validations completed at {0}".format(datetime.utcnow()))
+    except Exception as e:
+        logger.error(e.__str__())
+        logger.exception(e)
 
 
 
