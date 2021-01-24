@@ -11,9 +11,20 @@ class InfluencerBase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
     updated_at = models.DateTimeField(verbose_name='Updated At',default=None, blank=True, null=True )
     centra_update_at = models.DateTimeField(verbose_name='Centra Update At', blank=True,null=True)
+
     class Meta:
         ordering = ["-created_at", "-updated_at"]
         indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
+
+class OrderInfo(models.Model):
+    number = models.IntegerField()
+    orderDate = models.DateTimeField()
+    discount_coupons = models.CharField(max_length=100)
+    grandTotal = models.FloatField()
+    status = models.CharField(choices= map(lambda x:(x,x), is_answered_choices), max_length=10)
+
+
+
 
 class Influencer(InfluencerBase):
     post_status = map(lambda x: (x, x), influencer_post_status)
@@ -42,7 +53,7 @@ class Influencer(InfluencerBase):
     status = models.CharField(max_length=30, default=None, null=True, verbose_name='Status',choices=post_status)  # need to be correctd
     commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
-    revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True)
+    revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True, default=0)
     revenue_click = models.FloatField( verbose_name='Revenue Qlik', null=True, default=0)
     #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)

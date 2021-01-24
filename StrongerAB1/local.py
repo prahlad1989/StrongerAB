@@ -49,7 +49,7 @@ LOGGING = {
             'class' : 'logging.handlers.RotatingFileHandler',
             'filename' : 'logs/logfile',
             'formatter' : 'detailed',
-            'maxBytes': 100*1024*1024*5, # 5 MB
+            'maxBytes': 1024*1024*5, # 5 MB
             'backupCount': 5
         }
 
@@ -195,4 +195,4 @@ is_influencer_choices = ["", "Prospect", "Influencer"]
 is_answered_choices = ["","Yes", "No"]
 centra_key = "2de0107b9b16e994f1894e514f031a21"
 centra_api_url = "https://stronger.centra.com/graphql"
-centra_api_start_date = "2020-10-01"
+centra_api_start_date = "2020-12-01"

@@ -32,7 +32,7 @@ from StrongerAB1.settings import adminMsg
 from StrongerAB1.settings import b2b_mandatory_fields
 from StrongerAB1.settings import influencer_mandatory_fields
 import re
-from .tasks import centraOrdersUpdate
+from .tasks import centraOrdersUpdate,centraToDBFun
 logger = logging.getLogger(__name__)
 
 
@@ -169,30 +169,38 @@ class CollectionsUpdate(CentraUpdate):
         pass
 
 
-
-
-class OrderUpdatesView(BaseView):
-    def deleteTasks(self, name):
-        existing_tasks = Task.objects.all().filter(task_name=name).delete()
-        logger.info(existing_tasks[0])
-        logger.info("deleted {0} existing tasks with name {1}".format( existing_tasks[0],name))
+class CentraToDB(BaseView):
 
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
+    def deleteTasks(self, name):
+        existing_tasks = Task.objects.all().filter(task_name=name).delete()
+        logger.info(existing_tasks[0])
+        logger.info("deleted {0} existing tasks with name {1}".format( existing_tasks[0],name))
+
+    def get(self,request, *args, **kwargs):
+        logger.info("updated DB with order info")
+        self.deleteTasks("Influencers.tasks.centraToDBFun")
+        centraToDBFun(message="Centra to DB", repeat =Task.HOURLY)
+        return JsonResponse({"will be updated in an hour":True},status=200)
+
+class OrderUpdatesView(CentraToDB):
+
     def get(self,request, *args, **kwargs):
         logger.info("updated orders with discount coupon related info")
         self.deleteTasks("Influencers.tasks.centraOrdersUpdate")
-        centraOrdersUpdate(message="Centra orders update", repeat =Task.HOURLY)
+        centraOrdersUpdate(message="Centra orders update", repeat =10)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 class ValidationUpdatesView(OrderUpdatesView):
     def get(self,request, *args,**kwargs):
         logger.info("updating influencers with discount coupon related info{0}".format(datetime.now()))
         self.deleteTasks("Influencers.tasks.valiationsUpdate")
-        valiationsUpdate(message="Centra coupon validations update", repeat =300)
+        valiationsUpdate(message="Centra coupon validations update", repeat =3000)
         return JsonResponse({"coupon codes be updated in an hour":True},status=200)
+
 
 
 class InfluencerView(BaseView):

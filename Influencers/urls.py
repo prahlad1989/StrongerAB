@@ -40,7 +40,8 @@ urlpatterns = [
     path('logout', auth_views.LogoutView.as_view()),
     path('usernames',views.getUserNames,name='getUserNames'),
     path('updateCentraOrders', views.OrderUpdatesView.as_view(), name='updateCentraOrders'),
-    path('updateCentraValidations', views.ValidationUpdatesView.as_view(), name='updateCentraValidations')
+    path('updateCentraValidations', views.ValidationUpdatesView.as_view(), name='updateCentraValidations'),
+    path('centraToDB', views.CentraToDB.as_view(), name= 'centraToDB')
 
 
 
