@@ -41,10 +41,11 @@ LOGGING = {
     'handlers' : {
         'console' : {
             'class' : 'logging.StreamHandler',
-            'formatter' : 'detailed'
+            'formatter' : 'detailed',
+            'level': 'DEBUG'
         },
         'file' : {
-            'level' : 'INFO',
+            'level' : 'DEBUG',
             'class' : 'logging.handlers.RotatingFileHandler',
             'filename' : 'logs/logfile',
             'formatter' : 'detailed',
