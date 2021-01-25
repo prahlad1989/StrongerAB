@@ -158,8 +158,6 @@ class CentraToDB(OrdersUpdate2):
             last_sync_at = datetime.strptime( centra_api_start_date,"%Y-%m-%d").astimezone(timezone.utc)
 
 
-
-
         now = datetime.now().astimezone()
         delta = (now-last_sync_at).total_seconds()
         num_of_threads = multiprocessing.cpu_count()
@@ -167,6 +165,7 @@ class CentraToDB(OrdersUpdate2):
         start_and_end_dates = [(last_sync_at+timedelta(seconds=1+ i*temp_delta), last_sync_at+timedelta(seconds=(i+1)*temp_delta)) for i in range(num_of_threads)]
         with concurrent.futures.ThreadPoolExecutor(num_of_threads) as executor:
             results = [executor.submit(self.sync_orders, dateRange) for dateRange in start_and_end_dates]
+
         c = Constants.objects.filter(key='last_sync_at');
         if not c:
             c= Constants()
@@ -258,5 +257,4 @@ def valiationsUpdate(message):
 @background(schedule=100)
 def centraCouponsUpdate(message):
     logger.info("coupon validations started")
-
 
