@@ -165,7 +165,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-BACKGROUND_TASK_RUN_ASYNC = True
+BACKGROUND_TASK_RUN_ASYNC = False
 
 
 # Static files (CSS, JavaScript, Images)

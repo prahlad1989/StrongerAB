@@ -8,6 +8,7 @@ import json
 import logging
 from datetime import datetime, timedelta, date, timezone
 
+from background_task import background
 from django.contrib.auth import login, logout as log_out
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -22,7 +23,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from Influencers.forms import LoginForm, InfluencerForm
-from Influencers.models import Influencer as InfluencerModel, Constants as Constants
+from Influencers.models import Influencer as InfluencerModel, Constants as Constants, OrderInfo
 from Influencers.tasks import valiationsUpdate
 from background_task.models import Task
 
@@ -154,13 +155,21 @@ class CollectionsUpdate(CentraUpdate):
     def update(self):
         pass
 
-
-class CentraToDB(BaseView):
-
+class CentraBase(BaseView):
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
         return super().dispatch(request, *args, **kwargs)
 
+class ResetCentra(CentraBase):
+    def get(self,request, *args, **kwargs):
+        Constants.objects.filter(key='last_sync_at').delete()
+        OrderInfo.objects.all().delete()
+        Task.objects.all().delete()
+        logger.info("deleted all background tasks, last sync, orderinfo")
+        return JsonResponse({"Reset centra": True}, status=200)
+
+
+class CentraToDB(CentraBase):
     def deleteTasks(self, name):
         existing_tasks = Task.objects.all().filter(task_name=name).delete()
         logger.info(existing_tasks[0])

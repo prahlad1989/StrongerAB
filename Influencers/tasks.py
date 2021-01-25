@@ -113,7 +113,7 @@ class CentraToDB(OrdersUpdate2):
 
         while True:
             resp = client.execute(query=graphQlQuery, variables=api_query_params)
-            time.sleep(10)
+            time.sleep(1)
             orders = resp['data']['orders']
             coupon_revenue_accum = 0;
             logger.debug("orders  length {0}".format(len(orders)))
@@ -132,21 +132,21 @@ class CentraToDB(OrdersUpdate2):
                 orderInfo.grandTotal = order["grandTotal"]["value"]*order["currencyBaseRate"]
                 orderInfoList.append(orderInfo)
 
-
             if orders:
                     api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
                     logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
+                    logger.debug("trying to bulk insert")
+                    OrderInfo.objects.bulk_create(orderInfoList)
+                    time.sleep(1)
+                    logger.info("created {0} objects".format(len(orderInfoList)))
+                    orderInfoList.clear()
             else:
-
-                OrderInfo.objects.bulk_create(orderInfoList)
-                logger.info("created {0} objects".format(len(orderInfoList)))
                 logger.info("processed all orders for a thread.")
                 break
 
-        toc = time()
-        logger.info("time taken for {0} number of orders orders {1}".format(len(orders), int(toc - tic)))
 
     def update(self):
+        tic = time.time()
         last_sync_at = Constants.objects.filter(key='last_sync_at')
         if last_sync_at:  # remembering the last sync done with centra  so that we can process from there.
             last_sync_at = last_sync_at[0].value
@@ -160,7 +160,7 @@ class CentraToDB(OrdersUpdate2):
 
         now = datetime.now().astimezone()
         delta = (now-last_sync_at).total_seconds()
-        num_of_threads = multiprocessing.cpu_count()
+        num_of_threads = 10
         temp_delta = int(delta/num_of_threads) # for each call,
         start_and_end_dates = [(last_sync_at+timedelta(seconds=1+ i*temp_delta), last_sync_at+timedelta(seconds=(i+1)*temp_delta)) for i in range(num_of_threads)]
         with concurrent.futures.ThreadPoolExecutor(num_of_threads) as executor:
@@ -168,6 +168,7 @@ class CentraToDB(OrdersUpdate2):
 
         c = Constants.objects.filter(key='last_sync_at');
         if not c:
+            logger.info("updating last sync after centra reset")
             c= Constants()
             c.key="last_sync_at"
             c.value=now.strftime(self.timeFormat)
@@ -176,7 +177,8 @@ class CentraToDB(OrdersUpdate2):
             c = c[0]
             c.value=now.strftime(self.timeFormat)
             c.save()
-        logger.info("saving sync time at{0}".format(c.value))
+        logger.info("time taken for total orders sync".format(int(time.time()-tic)))
+
 
 @background(schedule=60*1)
 def centraToDBFun(message):
@@ -240,7 +242,7 @@ class CouponValidationUpdate(CentraUpdate):
         logger.info("time taken for total coupon updates {0}".format((int(time.time() - tic))))
 
 
-@background(schedule=60*1)
+@background(schedule=2*60*60)
 def valiationsUpdate(message):
     logger.info('initiated coupon validations thread')
     couponValidationUpdate  = CouponValidationUpdate()
