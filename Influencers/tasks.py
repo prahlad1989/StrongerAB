@@ -1,24 +1,21 @@
 import concurrent.futures
 import json
 import multiprocessing
-from functools import reduce
-
-from background_task import background
+from datetime import datetime, timedelta
 from logging import getLogger
 
-import requests
-from django.db import transaction
-from django.db.models import Q, Min
-
-from StrongerAB1.settings import centra_key, centra_api_url
-from Influencers.models import Influencer as Influencer, Constants, OrderInfo
-from datetime import date, datetime, timedelta
 import time
-
-from jsonpath_ng import jsonpath, parse
+from background_task import background
+from django.db import connection
+from django.db.models import Q, Min
 from django.utils import timezone
+from jsonpath_ng import parse
 from python_graphql_client import GraphqlClient
+
+from Influencers.models import Influencer as Influencer, Constants, OrderInfo
 from StrongerAB1.settings import centra_api_start_date
+from StrongerAB1.settings import centra_key, centra_api_url
+
 logger = getLogger(__name__)
 
 
@@ -71,196 +68,16 @@ class OrdersUpdate(CentraUpdate):
                     } """
 
 
-    def update(self):
-       # Read all the influencers table in the last one month or read each row which have coupon code validation greater than today.
-       #  pick each coupon's start date and end date.
-       #  read all the orders in that time span , check if the each order discount has that coupon. Then , update the DB of the influencer.
-       #  Read each of the
-
-
-        #select oldest coupon code which is still valid currently.
-
-
-        valid_till_filter = Q(valid_till__gte = self.today) # format to be done later
-        query = Influencer.objects.filter(valid_till_filter).aggregate(Min('valid_from'))
-        #startDate = query['valid_from__min'].date().__str__() # why needed?
-        influencersList = list(Influencer.objects.filter(valid_till_filter))
-
-        graphQlQuery = self.graphQlQuery
-        client = self.client
-
-        api_query_params = {}
-        api_query_params['pageNumber'] = 1
-        api_query_params["orderEndDate"] = self.today.strftime(self.timeFormat)
-        lastProcessedOrderNum =0
-        lastProcessedOrderDate=""
-        lastProcessedOrder = Constants.objects.filter(key = 'lastProcessedOrder')
-        allCouponCodes = {}
-        if lastProcessedOrder: # remembering the last processed order so that we can process from there.
-
-            lastProcessedOrder = lastProcessedOrder[0]
-            order = json.loads(lastProcessedOrder.value)
-            logger.debug("last processed order exists as {0} ".format(order))
-            api_query_params['orderStartDate'] = order['orderDate']
-            lastProcessedOrderNum = order['number']
-        else:
-            logger.debug("no last processed order")
-            lastProcessedOrderNum =0
-            api_query_params['orderStartDate']= lastProcessedOrderDate = centra_api_start_date
-
-        tic= time.time()
-        while True:
-
-            resp = client.execute(query=graphQlQuery, variables=api_query_params)
-            orders = resp['data']['orders']
-            for order in orders:
-                if order['number'] == lastProcessedOrderNum:
-                    logger.info("bit of repeating.this order is already processed")
-                    continue
-                logger.info("order info {0}".format(order))
-                expr = parse('$.discountsApplied[*].discount.code')
-                values = expr.find(order)
-                values = list(map(lambda x: x.value, values))
-                if values:
-                    logger.info("coupon codes in order#{0} are {1}".format(order['number'], values))
-                    #influencersList = Influencer.objects.filter(valid_till_filter)
-
-                    for eachObj in influencersList:
-                        try:
-                            coupon = eachObj.discount_coupon
-                            if coupon and coupon in values:
-                                # logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3}", coupon, "created", order['number'], order['grandTotal']['value'])
-                                logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3} with currency{4} with exchange rate{5}".format(
-                                coupon, "created", order['number'], order['grandTotal']['value'], order['grandTotal']['currency']['code'], order['currencyBaseRate']))
-                                revenueGenerated = order['grandTotal']['value'] * order['currencyBaseRate']
-                                logger.info("previous revenue of coupon{0} is {1} ".format(coupon,eachObj.revenue_click))
-                                if revenueGenerated:
-                                    eachObj.revenue_click += revenueGenerated
-                                    logger.info("revenue click generated for coupon{0} is {1}".format(coupon, revenueGenerated))
-                                    #eachObj.centra_update_at = datetime.now(tz=timezone.utc)
-                                    eachObj.save()
-                            else:
-                                logger.info("our coupon not found in order {0}".format(order['number']))
-                        except Exception as e:
-                            logger.error("error with object{0} ".format(eachObj))
-                            logger.exception(e)
-
-                else:
-                    logger.info("no coupon codes in order {0}".format(order))
-            logger.info("time taken for {0} number of orders orders {1}".format(len(orders),int(time()-tic)))
-            if orders :
-                api_query_params['pageNumber'] = api_query_params['pageNumber']+1
-                logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
-                lastOrder = orders[len(orders)-1]
-                lastOrder = {"number": lastOrder["number"], "orderDate": lastOrder["orderDate"]}
-                if lastProcessedOrder:
-                    pass
-                else:
-                    lastProcessedOrder = Constants()
-                    lastProcessedOrder.key = "lastProcessedOrder"
-                lastProcessedOrder.value = json.dumps(lastOrder)
-                logger.info("saving last order values as {0} ".format(lastOrder))
-                lastProcessedOrder.save()
-            else:
-                logger.info("processed all orders. Done for now")
-                break
-        logger.error("time taken for total orders in a day orders orders {0}".format(int(time()-tic)))
-
-
 class OrdersUpdate2(OrdersUpdate):
-
-    def sync_orders(self, influencer):
-        graphQlQuery = self.graphQlQuery
-        client = self.client
-        logger.info(
-            "starting order sync for coupon {0} at influencer id {1}".format(influencer.discount_coupon, influencer.id))
-        tic = time.time()
-        orderEndDate = datetime.utcnow()
-        api_query_params = {}
-        api_query_params['pageNumber'] = 1
-        api_query_params["orderEndDate"] = orderEndDate.strftime(self.timeFormat)
-        if influencer.centra_update_at is not None:
-            orderStartDate = influencer.centra_update_at + timedelta(
-                seconds=1)  # so that you will not get previous orders in response
-            api_query_params['orderStartDate'] = orderStartDate.strftime(self.timeFormat)
-        else:
-            logger.debug("first time update of coupon {0}".format(influencer.discount_coupon))
-            orderStartDate = influencer.valid_from
-            api_query_params['orderStartDate'] = orderStartDate.strftime(self.timeFormat)
-        while True:
-            resp = client.execute(query=graphQlQuery, variables=api_query_params)
-            orders = resp['data']['orders']
-            coupon_revenue_accum = 0;
-            for order in orders:
-                logger.info("order info {0}".format(order))
-                expr = parse('$.discountsApplied[*].discount.code')
-                values = expr.find(order)
-                values = list(map(lambda x: x.value, values))
-                if values:
-                    logger.info("coupon codes in order#{0} are {1}".format(order['number'], values))
-                    try:
-                        coupon = influencer.discount_coupon
-                        if coupon and coupon in values:
-                            # logger.info("coupon {0} of influencer {1} found in order {2} so updating with price+ {3}", coupon, "created", order['number'], order['grandTotal']['value'])
-                            logger.info(
-                                "coupon {0} of influencer {1} found in order {2} so updating with price+ {3} with currency{4} with exchange rate{5}".format(
-                                    coupon, "created", order['number'], order['grandTotal']['value'],
-                                    order['grandTotal']['currency']['code'], order['currencyBaseRate']))
-
-                            revenueGenerated = order['grandTotal']['value'] * order['currencyBaseRate']
-                            logger.info("previous iteration revenue of coupon{0} is {1} ".format(coupon,
-                                                                                                 influencer.revenue_click))
-                            coupon_revenue_accum += revenueGenerated
-                            logger.info(
-                                "revenue click generated for coupon{0} is {1}".format(coupon, revenueGenerated))
-                            # eachObj.centra_update_at = datetime.now(tz=timezone.utc)
-
-                        else:
-                            logger.info("our coupon not found in order {0}".format(order['number']))
-                    except Exception as e:
-                        logger.error("error with object{0} ".format(coupon))
-                        logger.exception(e)
-
-                else:
-                    logger.info("no coupon codes in order {0}".format(order))
-
-            if orders:
-                api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
-                logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
-            else:
-                logger.info("processed all orders. Done for now")
-                break
-
-        if coupon_revenue_accum:
-            influencer.revenue_click += coupon_revenue_accum
-            influencer.centra_update_at = orderEndDate
-            influencer.save()
-            logger.info("added revenue {0}".format(coupon_revenue_accum))
-
-        toc = time()
-        logger.info("time taken for {0} number of orders orders {1}".format(len(orders), int(toc - tic)))
-
-
-
     def update(self):
-       # Read all the influencers table in the last one month or read each row which have coupon code validation greater than today.
-       #  pick each coupon's start date and end date.
-       #  read all the orders in that time span , check if the each order discount has that coupon. Then , update the DB of the influencer.
-       #  Read each of the
-
-
-        #select oldest coupon code which is still valid currently.
-
-
-        valid_till_filter = ~Q(discount_coupon = "None") # format to be done later
-        #startDate = query['valid_from__min'].date().__str__() # why needed?
-        influencersList = Influencer.objects.filter(valid_till_filter)
-        logger.info("influencerList for orders {0}".format(len(influencersList)))
-
-        with concurrent.futures.ThreadPoolExecutor(10) as executor:
-            results = [executor.submit(self.sync_orders, influencer) for influencer in influencersList]
-
-
+        cursor = connection.cursor()
+        try:
+            cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
+        logger.info("update revenue click complete")
 
 
 @background(schedule=60*1)
@@ -313,6 +130,7 @@ class CentraToDB(OrdersUpdate2):
                 orderInfo.grandTotal = order["grandTotal"]["value"]*order["currencyBaseRate"]
                 orderInfoList.append(orderInfo)
 
+
             if orders:
                     api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
                     logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
@@ -320,7 +138,6 @@ class CentraToDB(OrdersUpdate2):
 
                 OrderInfo.objects.bulk_create(orderInfoList)
                 logger.info("created {0} objects".format(len(orderInfoList)))
-
                 logger.info("processed all orders for a thread.")
                 break
 
@@ -339,7 +156,7 @@ class CentraToDB(OrdersUpdate2):
             last_sync_at = datetime.strptime( centra_api_start_date,"%Y-%m-%d").astimezone(timezone.utc)
 
 
-        tic = time.time()
+
 
         now = datetime.now().astimezone()
         delta = (now-last_sync_at).total_seconds()
@@ -366,9 +183,11 @@ def centraToDBFun(message):
 
     centraToDB  = CentraToDB()
     try:
+        tic = time.time()
         logger.debug("DB update started at {0}".format(datetime.utcnow()))
         centraToDB.update()
         logger.debug("DB update completed at {0}".format(datetime.utcnow()))
+        logger.info("time taken for DB update is {0}".format(int(time.time()-tic)))
     except Exception as e:
         logger.error(e.__str__())
         logger.exception(e)

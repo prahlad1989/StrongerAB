@@ -5,6 +5,7 @@ source venv/bin/activate
 
 #kills and creates new tasks
 curl  http://localhost:8000/updateCentraValidations
-#curl  http://localhost:80/updateCentraOrders
+curl  http://localhost:8000/updateCentraOrders
+curl  http://localhost:8000/centraToDB
 #start running scheduled tasks
 exec python manage.py process_tasks

@@ -183,7 +183,7 @@ class CentraToDB(BaseView):
     def get(self,request, *args, **kwargs):
         logger.info("updated DB with order info")
         self.deleteTasks("Influencers.tasks.centraToDBFun")
-        centraToDBFun(message="Centra to DB", repeat =Task.HOURLY)
+        centraToDBFun(message="Centra to DB", repeat =1*60)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 class OrderUpdatesView(CentraToDB):
@@ -191,7 +191,7 @@ class OrderUpdatesView(CentraToDB):
     def get(self,request, *args, **kwargs):
         logger.info("updated orders with discount coupon related info")
         self.deleteTasks("Influencers.tasks.centraOrdersUpdate")
-        centraOrdersUpdate(message="Centra orders update", repeat =10)
+        centraOrdersUpdate(message="Centra orders update", repeat =10*60)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 class ValidationUpdatesView(OrderUpdatesView):

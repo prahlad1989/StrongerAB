@@ -368,7 +368,7 @@
                  {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name" },
                  {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false},
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
-                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false },
+                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; } },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
                  {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true,itemTemplate: function(value) {
                     var x = new Date(value);
