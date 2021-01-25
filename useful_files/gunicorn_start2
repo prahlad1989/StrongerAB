@@ -20,7 +20,7 @@ echo "Starting $NAME as `whoami`"
 cd $DJANGODIR
 cp StrongerAB1/settings_prod.py StrongerAB1/settings.py
 source venv/bin/activate
-exec python manage.py migrate
+
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
 # Create the run directory if it doesn't exist
