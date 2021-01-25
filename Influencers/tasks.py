@@ -72,7 +72,7 @@ class OrdersUpdate2(OrdersUpdate):
     def update(self):
         cursor = connection.cursor()
         try:
-            cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
+            cursor.execute("update public.\"Influencers_influencer\" as inf set revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
 
         except Exception as e:
             logger.exception(e.__str__())
@@ -181,7 +181,7 @@ class CentraToDB(OrdersUpdate2):
 
 @background(schedule=60*1)
 def centraToDBFun(message):
-    logger.info('initiated db update')
+    logger.info('initiated db from centra update')
 
     centraToDB  = CentraToDB()
     try:
@@ -255,13 +255,8 @@ def valiationsUpdate(message):
         logger.exception(e)
 
 
-
 @background(schedule=100)
 def centraCouponsUpdate(message):
     logger.info("coupon validations started")
-
-
-def demo_task():
-    return None
 
 
