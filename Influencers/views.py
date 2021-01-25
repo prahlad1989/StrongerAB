@@ -23,7 +23,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from Influencers.forms import LoginForm, InfluencerForm
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants
-from Influencers.tasks import demo_task, valiationsUpdate
+from Influencers.tasks import valiationsUpdate
 from background_task.models import Task
 
 from StrongerAB1.settings import LEADSPAN, ADMINSPAN, influencer_post_status, paid_unpaid_choices, \
@@ -38,21 +38,7 @@ logger = logging.getLogger(__name__)
 
 
 
-@csrf_exempt
-def tasks(request):
-    if request.method == 'GET':
-        message = request.GET['query']
-        if message:
-            demo_task(message)
-        return _post_tasks(request)
-    else:
-        return HttpResponse("Send proper request", status=405)
 
-def _post_tasks(request):
-    message = request.POST['message']
-    logger.debug('calling demo_task. message={0}'.format(message))
-    demo_task(message)
-    return JsonResponse({}, status=302)
 
 class Index(TemplateView):
     template_name = 'index.html'
