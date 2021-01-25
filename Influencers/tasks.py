@@ -73,6 +73,7 @@ class OrdersUpdate2(OrdersUpdate):
         cursor = connection.cursor()
         try:
             cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
+
         except Exception as e:
             logger.exception(e.__str__())
         finally:
@@ -84,9 +85,10 @@ class OrdersUpdate2(OrdersUpdate):
 def centraOrdersUpdate(message):
     logger.info('initiated ordersupdate thread: ')
 
-    ordersUpdate  = OrdersUpdate2()
+
     try:
         logger.debug("order update started at {0}".format(datetime.utcnow()))
+        ordersUpdate = OrdersUpdate2()
         ordersUpdate.update()
         logger.debug("order update completed at {0}".format(datetime.utcnow()))
     except Exception as e:
