@@ -36,11 +36,6 @@ import re
 from .tasks import centraOrdersUpdate,centraToDBFun
 logger = logging.getLogger(__name__)
 
-
-
-
-
-
 class Index(TemplateView):
     template_name = 'index.html'
 
@@ -196,11 +191,8 @@ class ValidationUpdatesView(OrderUpdatesView):
         valiationsUpdate(message="Centra coupon validations update", repeat =3000)
         return JsonResponse({"coupon codes be updated in an hour":True},status=200)
 
-
-
 class InfluencerView(BaseView):
     pass
-
 
 class Influencers(BaseView):
     @method_decorator(login_required)
@@ -287,7 +279,6 @@ class Influencers(BaseView):
         statusJSON['duplicates'] = duplicates
         statusJSON['createdCount'] = createdLeadsCount
         return JsonResponse(statusJSON, safe=False, status=201)
-
 
 
 @login_required()

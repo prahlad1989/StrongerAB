@@ -31,13 +31,13 @@ class CentraUpdate:
 
 
 class OrdersUpdate(CentraUpdate):
-    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 5000, page: $pageNumber, sort: number_ASC  )
+    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED, PENDING], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 5000, page: $pageNumber, sort: number_ASC  )
                     { orderDate
                      number 
                      createdAt
                      currencyBaseRate
                      status 
-                     grandTotal{ 
+                     grandTotal(includingTax: false){ 
                         ...monetary }
                      discountsApplied{
                         date
@@ -72,7 +72,7 @@ class OrdersUpdate2(OrdersUpdate):
     def update(self):
         cursor = connection.cursor()
         try:
-            cursor.execute("update public.\"Influencers_influencer\" as inf set revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status='SHIPPED' and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
+            cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
 
         except Exception as e:
             logger.exception(e.__str__())
@@ -81,10 +81,9 @@ class OrdersUpdate2(OrdersUpdate):
         logger.info("update revenue click complete")
 
 
-@background(schedule=60*1)
+@background(schedule=30*60)
 def centraOrdersUpdate(message):
     logger.info('initiated ordersupdate thread: ')
-
 
     try:
         logger.debug("order update started at {0}".format(datetime.utcnow()))
@@ -97,7 +96,7 @@ def centraOrdersUpdate(message):
 
 
 class CentraToDB(OrdersUpdate2):
-    def sync_orders(self, dateRange):
+    def sync_orders(self, dateRange, totalOdersDict):
         graphQlQuery = self.graphQlQuery
         client = self.client
         orderStartDate = dateRange[0]
@@ -115,13 +114,19 @@ class CentraToDB(OrdersUpdate2):
             resp = client.execute(query=graphQlQuery, variables=api_query_params)
             time.sleep(1)
             orders = resp['data']['orders']
-            coupon_revenue_accum = 0;
             logger.debug("orders  length {0}".format(len(orders)))
             for order in orders:
                 if(not order["discountsApplied"]):
                     continue
+
                 orderInfo = OrderInfo()
                 orderInfo.number = order['number']
+                #logger.debug("order number {0}".format(orderInfo.number))
+                #logger.debug("order number {0}".format(orderInfo.number))
+                if(orderInfo.number in totalOdersDict):
+                    logger.error("order repeated with {0},{1},{2} with {3}".format( api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']  ,totalOdersDict[orderInfo.number] ))
+                else:
+                    totalOdersDict[orderInfo.number] = [api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']]
                 orderInfo.orderDate = order['orderDate']
                 expr = parse('$.discountsApplied[*].discount.code')
                 values = expr.find(order)
@@ -156,15 +161,14 @@ class CentraToDB(OrdersUpdate2):
         else:
             logger.debug("not processed previously")
             last_sync_at = datetime.strptime( centra_api_start_date,"%Y-%m-%d").astimezone(timezone.utc)
-
-
         now = datetime.now().astimezone()
         delta = (now-last_sync_at).total_seconds()
         num_of_threads = 10
         temp_delta = int(delta/num_of_threads) # for each call,
+        totalOrdersDict = dict()
         start_and_end_dates = [(last_sync_at+timedelta(seconds=1+ i*temp_delta), last_sync_at+timedelta(seconds=(i+1)*temp_delta)) for i in range(num_of_threads)]
         with concurrent.futures.ThreadPoolExecutor(num_of_threads) as executor:
-            results = [executor.submit(self.sync_orders, dateRange) for dateRange in start_and_end_dates]
+            results = [executor.submit(self.sync_orders, dateRange, totalOrdersDict) for dateRange in start_and_end_dates]
 
         c = Constants.objects.filter(key='last_sync_at');
         if not c:
@@ -177,7 +181,7 @@ class CentraToDB(OrdersUpdate2):
             c = c[0]
             c.value=now.strftime(self.timeFormat)
             c.save()
-        logger.info("time taken for total orders sync".format(int(time.time()-tic)))
+        logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
 
 
 @background(schedule=60*1)
