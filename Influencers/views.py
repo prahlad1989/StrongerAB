@@ -120,7 +120,7 @@ class BaseView(View):
                 date = datetime.fromtimestamp(item[field.name]).date()
                 itemFromDB.__setattr__(field.name, date)
 
-            elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr']:
+            elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr','revenue_click']:
                 #print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
         itemFromDB.updated_by = request.user
