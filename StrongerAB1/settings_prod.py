@@ -165,7 +165,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-BACKGROUND_TASK_RUN_ASYNC = True
+BACKGROUND_TASK_RUN_ASYNC = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -178,7 +178,7 @@ STATICFILES_DIR = (
  	os.path.join(BASE_DIR,'Influencers/static'),
  )
 paid_unpaid_choices = ['','Paid','Unpaid','OK']
-order_status_choices = ['', 'SHIPPED','CONFIRMED', 'PARTIAL', 'SHIPPED', 'ARCHIVED', 'DELETED' ]
+order_status_choices = ['', 'PENDING','CONFIRMED', 'PARTIAL', 'SHIPPED', 'ARCHIVED', 'DELETED' ]
 portals=[('',''), ('Linked In','Linked In'),('Indeed','Indeed'),('Glassdoor','Glassdoor'),('Other','Other')]
 b2b_mandatory_fields = ["Company Name", "Full Name", "Designation", "Email", "Linkedin ID", "Position", "Job Location", "Job Posting Links", "Company Website", "Company Linkedin" ]
 LOGIN_URL='/login'
