@@ -223,22 +223,21 @@ class CouponValidationUpdate(CentraUpdate):
 
         for eachObj in influencersList:
             try:
-                coupon = eachObj.discount_coupon
-                api_query_params['couponCode'] = coupon
+                api_query_params['couponCode'] = discount_coupon = eachObj.discount_coupon
                 resp = client.execute(query=graphQlQuery, variables=api_query_params)
                 coupons = resp["data"]["discounts"]
-                if coupons:
-                    coupon_from_api = coupons[0]
-                    logger.debug("coupon details are {0}".format(coupon_from_api))
-                    eachObj.valid_from = datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
-                        timezone.utc)
-                    eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
-                        timezone.utc)
-                    #eachObj.centra_update_at = datetime.now(tz=timezone.utc)
-                    logger.debug("copon: {0},start time: {1}, and end time: {2}".format(coupon, eachObj.valid_from,
-                                                                                       eachObj.valid_till))
-                    eachObj.save()
-
+                for coupon_from_api in coupons:
+                    if coupon_from_api['code'] ==  discount_coupon:
+                        logger.debug("coupon details are {0}".format(coupon_from_api))
+                        eachObj.valid_from = datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
+                            timezone.utc)
+                        eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
+                            timezone.utc)
+                        # eachObj.centra_update_at = datetime.now(tz=timezone.utc)
+                        logger.debug("copon: {0},start time: {1}, and end time: {2}".format(coupon_from_api, eachObj.valid_from,
+                                                                                            eachObj.valid_till))
+                        eachObj.save()
+                        break
             except Exception as e:
                 logger.error("error with object{0} ".format(eachObj))
                 logger.exception(e)

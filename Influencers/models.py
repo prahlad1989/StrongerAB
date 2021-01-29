@@ -22,7 +22,7 @@ class OrderInfo(models.Model):
     discount_coupons = models.CharField(max_length=100)
     grandTotal = models.FloatField()
     status = models.CharField(choices= map(lambda x:(x,x), is_answered_choices), max_length=10)
-
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
 
 
 

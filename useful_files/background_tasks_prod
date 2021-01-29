@@ -3,6 +3,7 @@ DJANGODIR=/var/www/yoursite/StrongerAB
 cd $DJANGODIR
 source venv/bin/activate
 #kills and creates new tasks
+curl  http://185.157.223.84/resetCentra
 curl  http://185.157.223.84/updateCentraValidations
 curl  http://185.157.223.84/updateCentraOrders
 curl  http://185.157.223.84/centraToDB
