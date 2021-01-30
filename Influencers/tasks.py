@@ -31,7 +31,7 @@ class CentraUpdate:
 
 
 class OrdersUpdate(CentraUpdate):
-    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED, PENDING], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 5000, page: $pageNumber, sort: number_ASC  )
+    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED, PENDING], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 500, page: $pageNumber, sort: number_ASC  )
                     { orderDate
                      number 
                      createdAt
@@ -111,43 +111,46 @@ class CentraToDB(OrdersUpdate2):
         orderInfoList =[]
 
         while True:
-            resp = client.execute(query=graphQlQuery, variables=api_query_params)
-            time.sleep(1)
-            orders = resp['data']['orders']
-            logger.debug("orders  length {0}".format(len(orders)))
-            for order in orders:
-                if(not order["discountsApplied"]):
-                    continue
-
-                orderInfo = OrderInfo()
-                orderInfo.number = order['number']
-                #logger.debug("order number {0}".format(orderInfo.number))
-                #logger.debug("order number {0}".format(orderInfo.number))
-                if(orderInfo.number in totalOdersDict):
-                    logger.error("order repeated with {0},{1},{2} with {3}".format( api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']  ,totalOdersDict[orderInfo.number] ))
+            try:
+                resp = client.execute(query=graphQlQuery, variables=api_query_params)
+                time.sleep(1)
+                orders = resp['data']['orders']
+                logger.debug("orders  length {0}".format(len(orders)))
+                for order in orders:
+                    if(not order["discountsApplied"]):
+                        continue
+                    orderInfo = OrderInfo()
+                    orderInfo.number = order['number']
+                    logger.debug("order details  {0}".format(order))
+                    # if(orderInfo.number in totalOdersDict):
+                    #     logger.error("order repeated with {0},{1},{2} with {3}".format( api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']  ,totalOdersDict[orderInfo.number] ))
+                    # else:
+                    #     totalOdersDict[orderInfo.number] = [api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']]
+                    orderInfo.orderDate = order['orderDate']
+                    expr = parse('$.discountsApplied[*].discount.code')
+                    values = expr.find(order)
+                    values = list(map(lambda x: x.value, values))
+                    logger.debug("discount coupons {0} ".format(values))
+                    if not values[0]:
+                        logger.debug("has no discounts")
+                        continue
+                    orderInfo.discount_coupons = values[0]
+                    orderInfo.status = order["status"]
+                    orderInfo.grandTotal = order["grandTotal"]["value"]*order["currencyBaseRate"]
+                    orderInfoList.append(orderInfo)
+                if orders:
+                        api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
+                        logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
+                        logger.debug("trying to bulk insert")
+                        OrderInfo.objects.bulk_create(orderInfoList)
+                        logger.info("created {0} objects".format(len(orderInfoList)))
+                        orderInfoList.clear()
                 else:
-                    totalOdersDict[orderInfo.number] = [api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']]
-                orderInfo.orderDate = order['orderDate']
-                expr = parse('$.discountsApplied[*].discount.code')
-                values = expr.find(order)
-                values = list(map(lambda x: x.value, values))
-                #orderInfo.discount_coupons = reduce(lambda x,y:x+""+y+",", values, ",")
-                orderInfo.discount_coupons = values[0]
-                orderInfo.status = order["status"]
-                orderInfo.grandTotal = order["grandTotal"]["value"]*order["currencyBaseRate"]
-                orderInfoList.append(orderInfo)
-
-            if orders:
-                    api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
-                    logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
-                    logger.debug("trying to bulk insert")
-                    OrderInfo.objects.bulk_create(orderInfoList)
-                    time.sleep(1)
-                    logger.info("created {0} objects".format(len(orderInfoList)))
-                    orderInfoList.clear()
-            else:
-                logger.info("processed all orders for a thread.")
-                break
+                    logger.info("processed all orders for a thread.")
+                    break
+            except Exception as e:
+                logger.exception(e)
+                raise e
 
 
     def update(self):
@@ -184,7 +187,7 @@ class CentraToDB(OrdersUpdate2):
         logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
 
 
-@background(schedule=60*1)
+@background(schedule=1)
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
 
