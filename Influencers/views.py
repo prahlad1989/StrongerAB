@@ -160,7 +160,10 @@ class ResetCentra(CentraBase):
         Constants.objects.filter(key='last_sync_at').delete()
         OrderInfo.objects.all().delete()
         Task.objects.all().delete()
-        logger.info("deleted all background tasks, last sync, orderinfo")
+        from StrongerAB1.settings import centra_api_start_date
+        start_date = datetime.strptime(centra_api_start_date, "%Y-%m-%d").astimezone(timezone.utc)
+        InfluencerModel.objects.filter(valid_from__gte =start_date).update(valid_from=None, valid_till= None, revenue_click=None)
+        logger.info("deleted all background tasks, last sync, orderinfo, discount code validations")
         return JsonResponse({"Reset centra": True}, status=200)
 
 

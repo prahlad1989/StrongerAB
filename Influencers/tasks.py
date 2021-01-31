@@ -81,7 +81,7 @@ class OrdersUpdate2(OrdersUpdate):
         logger.info("update revenue click complete")
 
 
-@background(schedule=30*60)
+@background(schedule=60*60)
 def centraOrdersUpdate(message):
     logger.info('initiated ordersupdate thread: ')
 
@@ -136,7 +136,7 @@ class CentraToDB(OrdersUpdate2):
                         continue
                     orderInfo.discount_coupons = values[0]
                     orderInfo.status = order["status"]
-                    orderInfo.grandTotal = order["grandTotal"]["value"]*order["currencyBaseRate"]
+                    orderInfo.grandTotal = round(order["grandTotal"]["value"]*order["currencyBaseRate"])
                     orderInfoList.append(orderInfo)
                 if orders:
                         api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
@@ -187,7 +187,7 @@ class CentraToDB(OrdersUpdate2):
         logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
 
 
-@background(schedule=1)
+@background(schedule=1*60)
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
 
