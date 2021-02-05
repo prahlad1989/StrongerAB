@@ -157,9 +157,9 @@ class CentraBase(BaseView):
 
 class ResetCentra(CentraBase):
     def get(self,request, *args, **kwargs):
+        Task.objects.all().delete()
         Constants.objects.filter(key='last_sync_at').delete()
         OrderInfo.objects.all().delete()
-        Task.objects.all().delete()
         from StrongerAB1.settings import centra_api_start_date
         start_date = datetime.strptime(centra_api_start_date, "%Y-%m-%d").astimezone(timezone.utc)
         InfluencerModel.objects.filter(valid_from__gte =start_date).update(valid_from=None, valid_till= None, revenue_click=None)
@@ -180,7 +180,6 @@ class CentraToDB(CentraBase):
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 class OrderUpdatesView(CentraToDB):
-
     def get(self,request, *args, **kwargs):
         logger.info("updated orders with discount coupon related info")
         self.deleteTasks("Influencers.tasks.centraOrdersUpdate")
@@ -356,7 +355,7 @@ def leadToDict(x):
     item = model_to_dict(x, fields=[field.name for field in x._meta.fields])
     item['created_at'] = x.created_at
     item['updated_at'] = x.updated_at
-    item['updated_by__username'] = x.created_by.username
+    item['created_by__username'] = x.created_by.username
     item['updated_by__username'] = x.updated_by.username
     item['created_by__first_name'] = x.created_by.first_name
     item['created_by__last_name'] = x.created_by.last_name
