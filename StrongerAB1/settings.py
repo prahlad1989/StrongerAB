@@ -25,7 +25,7 @@ SECRET_KEY = '6pl(ljdspnr)!2_jk^--_%t8at2#9qg+gm3k$6q@j@1l(8o20+'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0']
+ALLOWED_HOSTS = ['127.0.0.1','0.0.0.0','localhost']
 
 # Application definition
 LOGGING = {
@@ -33,7 +33,7 @@ LOGGING = {
     'disable_existing_loggers' : False,
     'formatters' : {
         'detailed' : {
-            'format' : '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format' : '{levelname} {asctime} {module} {lineno} {process:d} {thread:d} {message}',
             'style' : '{',
         }
 
@@ -41,14 +41,15 @@ LOGGING = {
     'handlers' : {
         'console' : {
             'class' : 'logging.StreamHandler',
-            'formatter' : 'detailed'
+            'formatter' : 'detailed',
+            'level': 'DEBUG'
         },
         'file' : {
-            'level' : 'INFO',
+            'level' : 'DEBUG',
             'class' : 'logging.handlers.RotatingFileHandler',
             'filename' : 'logs/logfile',
             'formatter' : 'detailed',
-            'maxBytes': 1024*1024*5, # 5 MB
+            'maxBytes': 100*1024*1024*5, # 5 MB
             'backupCount': 5
         }
 
@@ -63,6 +64,11 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': False,
         },
+        'background_task': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
 INSTALLED_APPS = [
@@ -72,6 +78,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'background_task',
     'Influencers',
 ]
 
@@ -118,11 +125,10 @@ WSGI_APPLICATION = 'StrongerAB1.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'TestingDB2',
+        'NAME': 'influe_prod_copy2',
         'USER': 'postgres',
-        'PASSWORD': 'leadsmgmt',
-        'HOST': 'ec2-13-233-72-107.ap-south-1.compute.amazonaws.com',
-
+        'PASSWORD': 'abc123',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 }
@@ -159,6 +165,7 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+BACKGROUND_TASK_RUN_ASYNC = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -170,14 +177,22 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 STATICFILES_DIR = (
  	os.path.join(BASE_DIR,'Influencers/static'),
  )
-paid_unpaid_choices = (('Paid','Paid'),('Unpaid','Unpaid'),('OK','OK'))
+paid_unpaid_choices = ['','Paid','Unpaid','OK']
+order_status_choices = ['', 'PENDING','CONFIRMED', 'PARTIAL', 'SHIPPED', 'ARCHIVED', 'DELETED' ]
 portals=[('',''), ('Linked In','Linked In'),('Indeed','Indeed'),('Glassdoor','Glassdoor'),('Other','Other')]
 b2b_mandatory_fields = ["Company Name", "Full Name", "Designation", "Email", "Linkedin ID", "Position", "Job Location", "Job Posting Links", "Company Website", "Company Linkedin" ]
 LOGIN_URL='/login'
-LOGIN_REDIRECT_URL='/all_companies'
-LOGOUT_REDIRECT_URL='/all_companies'
+LOGIN_REDIRECT_URL='/all_influencers'
+LOGOUT_REDIRECT_URL='/all_influencers'
 LEADSPAN=30
 ADMINSPAN=100
 adminMsg=" if you are not admin"
-response_choices = [('',''),('Positive','Positive'),('Negative', 'Negative'),('Future','Future')]
-influencer_post_status = ['Published', 'Reminder1', 'Reminder2', 'Abandoned']
+
+influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
+#influencer_mandatory_fields =['Instagram Username','Country','Influencer/Prospect','ID']
+influencer_mandatory_fields =['Country','Influencer/Prospect','ID']
+is_influencer_choices = ["", "Prospect", "Influencer"]
+is_answered_choices = ["","Yes", "No"]
+centra_key = "2de0107b9b16e994f1894e514f031a21"
+centra_api_url = "https://stronger.centra.com/graphql"
+centra_api_start_date = "2020-10-01"
