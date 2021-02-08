@@ -64,6 +64,7 @@
        is_answered_choices = is_answered_choices.map(dropDownFunction);
        //console.log("influencer_post_status "+influencer_post_status);
        var influe_field_preferences = {{ influe_field_preferences | safe }};
+       var users = {{ users |safe}};
        function loadGrid($grid){
           $grid.jsGrid("loadData");
        }
@@ -480,7 +481,7 @@
              fields: [
                   {
                       headerTemplate: function() {
-                          return $("<button>").attr("type", "button").text("Delete").attr("class","jsgrid-header-cell jsgrid-align-center jsgrid-header-sortable")
+                          return $("<button>").attr("type", "button").text("Delete")
                                   .on("click", function () {
                                       deleteSelectedItems();
                                   });
@@ -500,8 +501,8 @@
                  },
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
                  {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)},
-                 {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
-                     return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by__username) },
+                 {title: "Manager",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
+                     return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },
                  {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on) },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
                  {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username)},

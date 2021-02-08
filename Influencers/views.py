@@ -410,6 +410,7 @@ def allInfluencers(request):
     context["influencer_mandatory_fields"] = influencer_mandatory_fields
     context["influencerFieldsList"]= influencerFieldsList
     context['influe_field_preferences'] = getUserPrefs(user)
+    context['users'] = getUserNames()
     return render(request, 'Influencer.html', context)
 
 
@@ -418,9 +419,13 @@ class Echo:
     def write(self, value):
         return value
 
-def getUserNames(request):
-    usernames = User.objects.order_by('username').values('username')
-    return JsonResponse({"usernames": list(usernames)}, safe=False, status=200)
+def getUserNames():
+    users = User.objects.values('username','first_name','last_name')
+    users = map(lambda  x:{'username': x['username'], 'full_name': x['first_name']+" "+x['last_name']},users)
+    result = [{'username': '', 'full_name': ''}]
+    result.extend(users)
+    return result
+    #return JsonResponse({"users": list(usernames)}, safe=False, status=200)
 
 
 # it just gives the days between today and respective 'LeadSpan' specified by the amdin
