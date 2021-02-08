@@ -23,7 +23,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from Influencers.forms import LoginForm, InfluencerForm
-from Influencers.models import Influencer as InfluencerModel, Constants as Constants, OrderInfo
+from Influencers.models import Influencer as InfluencerModel, Constants as Constants, OrderInfo, UserPreferences as UserPreferencesModel
 from Influencers.tasks import valiationsUpdate
 from background_task.models import Task
 
@@ -68,7 +68,7 @@ class BaseView(View):
 
     def _getForm(self, request):
         return InfluencerForm(request.POST)
-
+    @method_decorator(login_required)
     def delete(self, request, *args, **kwargs):
         item = json.loads(request.body)
         id = item['id']
@@ -85,6 +85,7 @@ class BaseView(View):
             'Record with email {0} has been deleted by user {1}'.format(influ_email, request.user.get_username()))
         return JsonResponse('ecord with email {0} has been deleted.'.format(influ_email), safe=False, status=200)
 
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         form = self._getForm(request)
         #logger.info("form is {0}".format(form))
@@ -103,7 +104,7 @@ class BaseView(View):
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
         return HttpResponse(status=201, content=object)
 
-
+    @method_decorator(login_required)
     def put(self, request, *args, **kwargs):
         item = json.loads(request.body)
         id = item['id']
@@ -117,8 +118,19 @@ class BaseView(View):
 
         for field in itemFromDB._meta.fields:
             if field.name in item and "_on" in field.name and item[field.name]:
-                date = datetime.fromtimestamp(item[field.name]).date()
-                itemFromDB.__setattr__(field.name, date)
+                date = item[field.name]
+                try:
+                    date = datetime.fromtimestamp(item[field.name]).date()
+                    itemFromDB.__setattr__(field.name, date)
+                except Exception as e:
+                    logger.exception(e)
+                    if(item[field.name].find("Z")> -1):
+                        date = datetime.strptime(item[field.name], "%Y-%m-%dT%H:%M:%SZ").astimezone(timezone.utc)
+                        itemFromDB.__setattr__(field.name, date)
+                    else:
+                        date = datetime.strptime(item[field.name], "%Y-%m-%d").astimezone(timezone.utc)
+                        itemFromDB.__setattr__(field.name, date)
+
 
             elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr','revenue_click']:
                 #print(field.name)
@@ -133,6 +145,36 @@ class BaseView(View):
         itemFromDB['index'] = index
         return JsonResponse(itemFromDB, safe=False, status=200)
 
+
+
+class UserPreferences(BaseView):
+    @method_decorator(login_required)
+    def post(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            obj = UserPreferencesModel()
+            obj.influe_field_preferences = data;
+            obj.created_by = request.user
+            obj.updated_by= request.user
+            obj.save()
+            return HttpResponse("updated prefs",201)
+        except Exception as e:
+            logger.error(e)
+            return HttpResponse("bad request", status=500)
+
+    @method_decorator(login_required)
+    def put(self, request, *args, **kwargs):
+        try:
+            data = json.loads(request.body)
+            obj = UserPreferencesModel.objects.get(created_by=request.user)
+            obj.influe_field_preferences = data;
+            obj.created_by = request.user
+            obj.updated_by= request.user
+            obj.save()
+            return HttpResponse("updated prefs", 201)
+        except Exception as e:
+            logger.error(e)
+            return HttpResponse("bad request", status=500)
 
 class CentraUpdate(object):
     def update(self):
@@ -202,6 +244,16 @@ class Influencers(BaseView):
         return super().dispatch(request, *args, **kwargs)
 
     @method_decorator(login_required)
+    def delete(self, request, *args, **kwargs):
+        try:
+            influes_tobe_deleted = json.loads(request.body)
+            deletedRows = self.model.objects.filter(id__in= influes_tobe_deleted).delete()
+            deletedRows=round(deletedRows[0] / 2)
+            return JsonResponse("deleted {0} records".format(deletedRows),safe=False,status=200)
+        except Exception as e:
+            logger.error(e)
+            return JsonResponse({"error":"Some issue at deletion"}, status=500)
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         rows = []
         filterDuplicates = False
@@ -217,6 +269,15 @@ class Influencers(BaseView):
         index = 0
         messages = []
         emailValidationRE = "^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$"
+
+        #striping all the data by removing spaces
+        def y(row):
+            rowDict = dict()
+            for key, value in row.items():
+                rowDict[key.strip()] = value.strip()
+            return rowDict;
+
+        rows = list(map(lambda x:y(x),rows))
         for row in rows:
 
             index += 1
@@ -230,11 +291,28 @@ class Influencers(BaseView):
                             raise email_validator.EmailNotValidError("Not a proper email format")
                     except email_validator.EmailNotValidError as err:
                         messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
-                elif "date" in key.lower() or "day" in key.lower() and value.strip():
+                elif ("date" in key.lower() or "day" in key.lower()) and value :
                     try:
                         test = value = datetime.fromisoformat(value).date()
                     except Exception as e:
                         messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
+        if len(messages) > 0:
+            try:
+                raise ValidationError(messages)
+            except ValidationError as  err:
+                logger.error(err.messages)
+                return JsonResponse({"error": err.messages}, status=500)
+
+
+        index =0
+        for row in rows:
+            index += 1
+            email = row['Email']
+            is_influencer_prospect = row['Influencer/Prospect']
+            if email and is_influencer_prospect and is_influencer_prospect == is_influencer_choices[1]:
+                if InfluencerModel.objects.filter(Q(email = email) & Q(is_influencer = is_influencer_prospect)).exists():
+                     messages.append(is_influencer_prospect + " with email  " + email + " : " + "already existed at row: {0};\n".format(index))
+
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
@@ -297,6 +375,7 @@ def index(request):
     context["first_name"]= request.user.get_first_name
     influencerFields = InfluencerModel._meta.get_fields()
     influencerFieldsDict = dict()
+
     for field in influencerFields:
         influencerFieldsDict[field.attname] = field.verbose_name
         influencerFieldsDict[field.verbose_name] = field.attname
@@ -305,6 +384,7 @@ def index(request):
 
 @login_required()
 def allInfluencers(request):
+    user = request.user
     context = dict()
     countries = Constants.objects.filter(Q(key='countries')).values('value')[0]['value']
     context['list_of_countries'] = countries
@@ -312,19 +392,24 @@ def allInfluencers(request):
     context['collections'] = collections
     channels = Constants.objects.filter(Q(key='channels')).values('value')[0]['value']
     context['channels'] = channels
-    context["is_user_staff"] = request.user.is_staff
-    context["username"] = request.user.get_username()
-    context["first_name"] = request.user.first_name
+    context["is_user_staff"] = user.is_staff
+    context["username"] = user.get_username()
+    context["first_name"] = user.first_name
     influencerFields = InfluencerModel._meta.get_fields()
+    influencerFieldsList = list()
     influencerFieldsDict = dict()
     for field in influencerFields:
         influencerFieldsDict[field.attname] = field.verbose_name
         influencerFieldsDict[field.verbose_name] = field.attname
+        influencerFieldsList.append(field.verbose_name)
     context["influencerFieldsDict"] = influencerFieldsDict
     context["influencer_post_status"] = influencer_post_status
     context["paid_unpaid_choices"] = paid_unpaid_choices
     context["is_influencer_choices"] = is_influencer_choices
     context["is_answered_choices"] = is_answered_choices
+    context["influencer_mandatory_fields"] = influencer_mandatory_fields
+    context["influencerFieldsList"]= influencerFieldsList
+    context['influe_field_preferences'] = getUserPrefs(user)
     return render(request, 'Influencer.html', context)
 
 
@@ -366,6 +451,14 @@ def leadToDict(x):
 
 #Influencer query
 
+def getUserPrefs(user):
+    try:
+        obj = UserPreferencesModel.objects.get(created_by=user)
+        return obj.influe_field_preferences
+    except Exception as e:
+        return []
+        logger.info("usef prefs for {0} not exists yet".format(user.get_username()))
+
 
 
 class InfluencersQuery(View):
@@ -376,11 +469,22 @@ class InfluencersQuery(View):
 
     model = InfluencerModel
 
+
+
     def getDateFields(self):
         return []
         # fields = self.model._meta.get_fields()
         # for field in fields:
 
+    # def fields_as_per_prefs(self, user):
+    #     resultFields = []
+    #     total_fields = self.fields_in_response
+    #     user_prefs = getUserPrefs(user)
+    #     user_prefs_columns = list(map(lambda x:x['Name'],user_prefs))
+    #     if not user_prefs_columns:
+    #         return total_fields
+    #     else:
+    #
     # leads search
     fields_in_response = ('id',
                           InfluencerModel.is_influencer.field_name,
@@ -417,6 +521,7 @@ class InfluencersQuery(View):
                           InfluencerModel.centra_update_at.field_name,
                           "updated_by__username", "updated_by__first_name",  "updated_by__last_name")
 
+
     def getQueryParams(self, request):
         searchParams = dict()
         requestBody = json.loads(request.body)
@@ -441,7 +546,7 @@ class InfluencersQuery(View):
             elif "_on" in k and v:
                 searchParams[k+"__gte"] = datetime.fromtimestamp(v).date()
                 searchParams[k + "__lte"] = datetime.fromtimestamp(v).date() + timedelta(1)
-            elif "__username" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
+            elif k and "__username" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
                 searchParams[k+"__gte"] = datetime.fromtimestamp(v)
                 searchParams[k + "__lte"] = datetime.fromtimestamp(v) + timedelta(1)
 

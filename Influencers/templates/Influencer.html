@@ -52,15 +52,28 @@
        paid_unpaid_choices = paid_unpaid_choices.map(dropDownFunction);
        //console.log(paid_unpaid_choices);
        var influencerOrProspectItems = {{ is_influencer_choices|safe }}
-       influencerOrProspectItems = influencerOrProspectItems.map(dropDownFunction);
+       influencerOrProspectItems = influencerOrProspectItems.map(function(x){
+         if(x == 'PR_') return {Name:'PR',Value:'PR_'};
+         else return {Name:x,Value:x};
+       });
        var is_answered_choices = {{ is_answered_choices |safe }};
+       var influencer_mandatory_fields = {{ influencer_mandatory_fields|safe }};
+       var influencerFieldsList = {{ influencerFieldsList|safe }}
+       //console.log(influencerFieldsList);
+       influencerFieldsList = influencerFieldsList.map(dropDownFunction);
        is_answered_choices = is_answered_choices.map(dropDownFunction);
        //console.log("influencer_post_status "+influencer_post_status);
-
+       var influe_field_preferences = {{ influe_field_preferences | safe }};
        function loadGrid($grid){
-           $grid.jsGrid("option","pageIndex",1);
-           $grid.jsGrid("loadData");
+          $grid.jsGrid("loadData");
        }
+       var isColumnVisible = function(column_name){
+                var previousSelectedFields = influe_field_preferences.map((x)=>x.Name);
+                if (influencer_mandatory_fields.indexOf(column_name) != -1 || previousSelectedFields.indexOf(column_name) != -1){
+                    return true;
+                }
+                return false;
+            }
 
    </script>
       <!-- header -->
@@ -73,7 +86,7 @@
                      <div class="menu">
                         <ul class="clearfix">
                            <li class="active"><a href="#all_influencers">Influencers</a></li>
-                           <li><a href="reports.html">Reports</a></li>
+                           <li><a href="reports.html" target="_blank">Reports</a></li>
                            <li><a href="#importFunction">Upload</a></li>
                            <li><a href="admin" target="_blank">Admin</a></li>
                            <li><a href="change-password">Change Pwd</a></li>
@@ -91,12 +104,34 @@
             </div>
          </div>
       </header>
-
-
       <!-- section -->
       <section class="layout_padding layer_style" id="all_influencers">
 
          <!--<div id="jsGrid3" ></div>-->
+         <button id="configureColumns" name="configureColumns">Configure Columns</button>
+         <script>
+
+         </script>
+         <div class="modal" tabindex="-1" role="dialog" id="myModal" style="display:none;">
+           <div class="modal-dialog" role="document">
+             <div class="modal-content">
+               <div class="modal-header">
+                 <h5 class="modal-title">Select the columns to be displayed</h5>
+                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                   <span aria-hidden="true">&times;</span>
+                 </button>
+               </div>
+               <div class="modal-body" id="myModal_body">
+               </div>
+<!--               <div class="modal-footer">-->
+<!--                 <button type="button" class="btn btn-primary">Save changes</button>-->
+<!--                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>-->
+<!--               </div>-->
+             </div>
+           </div>
+         </div>
+
+
          <br><br>
          <div id="jsGridInfluencers"></div>
 
@@ -144,6 +179,7 @@
 
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
       <script src=" http://benalman.com/code/projects/jquery-throttle-debounce/jquery.ba-throttle-debounce.js"></script>
+      <script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Header/js/jquery.stickytableheaders.js"></script>
       <!-- google map js -->
 
       <script src="static/js/db.js"></script>
@@ -153,9 +189,115 @@
       <!-- end google map js -->
      <script>
 
+            $(function() {
+                //console.log(influencerFieldsList);
+                $("table").each(function(){$(this).stickyTableHeaders();});
+                $("button[name='configureColumns']").on('click', function(e){
+                    $("#myModal").css("display","block");
+                });
+                $("button.close").on('click',function(e){
+                    $("#myModal").css("display","none");
+                });
+                db = influencerFieldsList.filter((x)=> x.Name != 'influencerbase ptr');
+                //console.log("executed");
+                var selectedItems = $.merge([],influe_field_preferences);
+
+                var selectItem = function(item) {
+                    selectedItems.push(item);
+                };
+
+                var unselectItem = function(item) {
+                    selectedItems = $.grep(selectedItems, function(i) {
+                        return i.Name != item.Name;
+                    });
+                };
+
+                var savePreferences = function($element) {
+                              method = "POST"
+                              //if user prefs already exists, make a put call.
+                              if(influe_field_preferences && influe_field_preferences.length > 0){
+                                method = "PUT";
+                              }
+                              var data = selectedItems;
+                              //console.log("selected ids {selectedItems}" );
+                              return $.ajax({
+                                     type: method,
+                                     url: "influe_field_preferences",
+                                     data: JSON.stringify(data),
+                                     headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
+                                     error:function(response){
+                                         if(response.responseJSON){
+                                              alert(response.responseJSON.error+" "+response.statusText);
+                                           }else{
+                                              alert(response.statusText);
+                                           }
+                                         selectedItems = [];
+                                     },
+                                     success: function(response){
+                                         //alert(response);
+                                         selectedItems = [];
+                                         $element.css("display","none");
+                                         location.reload();
+                                     }
+                                 });
+
+                          };
+
+                $("#myModal_body").jsGrid({
+
+                    width: "70%",
+                    autoload: true,
+                    confirmDeleting: false,
+                    controller: {
+                        loadData: function() {
+                            return db;
+                        }
+                    },
+                    fields: [
+                        {
+                            headerTemplate: function() {
+                                return $("<button>").attr("type", "button").text("Save changes")
+                                        .on("click", function () {
+                                            savePreferences($("#myModal_body"));
+                                        });
+                            },
+                            itemTemplate: function(_, item) {
+                                if($.inArray(item.Name, influencer_mandatory_fields) > -1){
+                                    return $("<input>").attr("type", "checkbox")
+                                        .prop("checked", true)
+                                        .prop("disabled",true)
+                                }
+                                else{
+                                    return $("<input>").attr("type", "checkbox")
+                                        .prop("checked", $.inArray(item.Name, selectedItems.map((x)=>x.Name)) > -1)
+                                        .on("change", function () {
+                                            $(this).is(":checked") ? selectItem(item) : unselectItem(item);
+                                        });
+                                }
+
+                            },
+                            align: "center",
+                            width: 50
+                        },
+                        { name: "Name", type: "text", width: 150 },
+
+                    ]
+                });
+
+
+
+
+            });
+
+      var influGrid = "";
       $(function() {
+
             $( document ).on( 'focus', ':input', function(){
                $( this ).attr( 'autocomplete', 'false' );
+            });
+
+            $(document).on('click', function(event){
+               !($(event.target).parents().hasClass("jsgrid")) && $("#jsGridInfluencers").jsGrid('cancelEdit');
             });
             var originalFilterTemplate = jsGrid.fields.text.prototype.filterTemplate;
                         //console.log(originalFilterTemplate);
@@ -247,7 +389,7 @@
 
 
             $("#jsGridInfluencers").jsGrid({
-             width:"250%",
+             width:Math.max((influencer_mandatory_fields.length+influe_field_preferences.length)*(8),100)+"%",
              inserting:true,
              editing:true,
              sorting:true,
@@ -315,6 +457,7 @@
              },
 
              loadData: function(filter) {
+                                 influGrid = this._grid;
                                  var d = $.Deferred();
                                  $.ajax({
                                      url: "influencers_query",
@@ -335,11 +478,34 @@
                          },
 
              fields: [
+                  {
+                      headerTemplate: function() {
+                          return $("<button>").attr("type", "button").text("Delete").attr("class","jsgrid-header-cell jsgrid-align-center jsgrid-header-sortable")
+                                  .on("click", function () {
+                                      deleteSelectedItems();
+                                  });
+                      },
+                      itemTemplate: function(_, item) {
+                          return $("<input>").attr("type", "checkbox")
+                                  .prop("checked", $.inArray(item, selectedItems) > -1)
+
+                                  .on("change", function () {
+                                      $(this).is(":checked") ? selectItem(item) : unselectItem(item);
+                                  });
+                      },
+                      align: "center",
+                      editing:true,
+                      width: 50,
+                      sorting:false
+                 },
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
-                 //{title: "SN", width:40, name: "index", type: "number", visible: true, inserting: false, editing: false , align: "center", filtering:false },
-                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Name", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" }},
+                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)},
                  {title: "Manager",name: "created_by__username", type: "text", valueField: "created_by", textField: "created_by__username",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
-                     return item.created_by__first_name +" "+ item.created_by__last_name; } },
+                     return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by__username) },
+                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on) },
+                 {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
+                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username)},
+                 {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number", visible: isColumnVisible(influencerFieldsDict.followers_count)},
 
                  {name: "email", title: influencerFieldsDict.email, type: "text", validate: "required", validate:
                   {
@@ -348,53 +514,94 @@
                          return regex.test(value);
                      },
                      message:"Please enter valid email."
-                 }},
-
-                 {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: is_answered_choices, valueField: "Name", textField: "Name" },
-                 {name: "last_contacted_on", title: influencerFieldsDict.last_contacted_on ,type: "myDateField",  align: "center",  inserting: true, editing: true,autosearch: true,filtering:true },
-                 {name: "is_duplicate", title: influencerFieldsDict.is_duplicate, type: "checkbox", visible: true, inserting: true, editing: true},
-                 {name: "order_num", title: influencerFieldsDict.order_num,  type: "text" },
-                 {name: "order_code", title: influencerFieldsDict.order_code, type:"text" },
-                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true },
-                 {name: "influencer_name", title: influencerFieldsDict.influencer_name, type: "text", required: true },
-                 {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name" },
-                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text"},
-                 {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number"},
-                 {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name", validate: "required" },
-                 {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name" },
-                 {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name"},
-                 {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text"},
-                 {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center",inserting: false, editing: false, autosearch: true,filtering:true },
-                 {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center",inserting:false, editing: false, autosearch: true,filtering:true },
-                 {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name" },
-                 {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false},
-                 {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false},
-                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; } },
-                 {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true},
+                 }, visible: isColumnVisible(influencerFieldsDict.email) },
+                 {name: "country", title: influencerFieldsDict.country, type: "select",  items: list_of_countries, selectedIndex: -1, textField:"Name", valueField: "Name", validate: "required", visible:isColumnVisible(influencerFieldsDict.country) },
+                 {name: "channel", title: influencerFieldsDict.channel, type: "select", selectedIndex: -1, items: channels, textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.channel)},
+                 {name: "discount_coupon", title: influencerFieldsDict.discount_coupon, type: "text", visible: isColumnVisible(influencerFieldsDict.discount_coupon)},
+                 {name: "valid_from", title: influencerFieldsDict.valid_from, type: "myDateField",  align: "center",inserting: false, editing: false, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.valid_from) },
+                 {name: "valid_till", title: influencerFieldsDict.valid_till, type: "myDateField",  align: "center",inserting:false, editing: false, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.valid_till) },
+                 {name: "status", title: influencerFieldsDict.status, type: "select", selectedIndex: -1, items: influencer_post_status,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.status)},
+                 {name: "order_code", title: influencerFieldsDict.order_code, type:"text", visible: isColumnVisible(influencerFieldsDict.order_code) },
+                 {name: "order_num", title: influencerFieldsDict.order_num,  type: "text", visible: isColumnVisible(influencerFieldsDict.order_num) },
+                 {name: "influencer_name", title: influencerFieldsDict.influencer_name, type: "text", required: true, visible: isColumnVisible(influencerFieldsDict.influencer_name) },
+                 {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.collection) },
+                 {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false, visible: isColumnVisible(influencerFieldsDict.commission)},
+                 {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false,  visible: isColumnVisible(influencerFieldsDict.product_cost) },
+                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; },visible: isColumnVisible(influencerFieldsDict.revenue_click)  },
+                 {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true, visible: isColumnVisible(influencerFieldsDict.comments) },
                  {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true,itemTemplate: function(value) {
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
-                } },
+                } ,visible: isColumnVisible(influencerFieldsDict.created_at)  },
 
                  {name: "updated_by__username", title: "Last Updated By", type:"text", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
                   return item.updated_by__first_name +" "+ item.updated_by__last_name;
-                 } },
+                 },visible: isColumnVisible(influencerFieldsDict.updated_by__username)  },
                  {name: "updated_at", title: influencerFieldsDict.updated_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true, itemTemplate: function(value) {
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
-                } },
+                } , visible: isColumnVisible(influencerFieldsDict.updated_at)  },
                 {name: "centra_update_at", title: influencerFieldsDict.centra_update_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true, itemTemplate: function(value) {
                     if(!value) return "";
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
-                } },
+                }, visible: isColumnVisible(influencerFieldsDict.centra_update_at) },
 
-                {name: "is_old_record", type: "checkbox", title:influencerFieldsDict.is_old_record, visible: true, inserting: true, editing: true},
+                 {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: is_answered_choices, valueField: "Name", textField: "Name",  visible: isColumnVisible(influencerFieldsDict.is_answered)  },
+                 {name: "last_contacted_on", title: influencerFieldsDict.last_contacted_on ,type: "myDateField",  align: "center",  inserting: true, editing: true,autosearch: true,filtering:true , visible: isColumnVisible(influencerFieldsDict.last_contacted_on)},
+                 {name: "", title: influencerFieldsDict.is_duplicate, type: "checkbox", visible: true, inserting: true, editing: true, visible: isColumnVisible(influencerFieldsDict.is_duplicate) },
+
+                 {name: "is_old_record", type: "checkbox", title:influencerFieldsDict.is_old_record, visible: true, inserting: true, editing: true,  visible: isColumnVisible(influencerFieldsDict.is_old_record)},
 
                  {type: "control" }
              ]
 
              });
+
+
+          var selectedItems = [];
+
+          var selectItem = function(item) {
+              selectedItems.push(item);
+          };
+
+          var unselectItem = function(item) {
+              selectedItems = $.grep(selectedItems, function(i) {
+                  return i !== item;
+              });
+          };
+
+          var deleteSelectedItems = function() {
+              if(!selectedItems.length || !confirm("Are you sure?"))
+                  return;
+              selectedIds = selectedItems.map((x)=>x.id);
+              //console.log("selected ids {selectedIds}" );
+              return $.ajax({
+                     type: "DELETE",
+                     url: "influencers",
+                     data: JSON.stringify(selectedIds),
+                     headers: {"X-CSRFToken": '{{ csrf_token }}', "content-type":"text/json"},
+                     error:function(response){
+                         if(response.responseJSON){
+                              alert(response.responseJSON.error+" "+response.statusText);
+                           }else{
+                              alert(response.statusText);
+                           }
+                         selectedItems = [];
+                     },
+                     success: function(response){
+                         alert(response);
+                         selectedItems = [];
+                         loadGrid($("#jsGridInfluencers"));
+                     }
+                 });
+
+
+           $("table").each(function(){$(this).stickyTableHeaders();});
+
+          };
+
+
 
     $('#influencers').submit(function(e){
       e.preventDefault();
@@ -419,7 +626,7 @@
            success: function(response){
                var duplicates = response.duplicates;
                var createdCount = response.createdCount;
-               console.log("after succes");
+               //console.log("after succes");
                if(duplicates && duplicates.length > 0){
                 /*
                    create modal window ,and pass leads created number till now.
@@ -468,22 +675,19 @@
                 hashValue = this.hash;
            menuList.each(function(){
             if(this.hash == hashValue){
-               $(this.hash).show();
-               $(this).parent().addClass("active");
+               if(hashValue == "#all_influencers"){
+                  window.open("/");
+               }else{
+                  $(this.hash).show();
+                  $(this).parent().addClass("active");
+               }
+
             }else{
                $(this.hash).hide();
                $(this).parent().removeClass("active");
             }
            });
-           /*if(this.hash == "#importFunction"){
-            $("#all_influencers").hide();
-            $("#importFunction").show();
-           }
-           else if(this.hash == "#all_influencers" || this.hash == "#file_upload_b2b"){
-            $("#importFunction").hide();
-             $("#all_influencers").show();
-           }
-           $('html,body').animate({scrollTop: $(this.hash).offset().top-100},'slow'); */
+
         });
 
         });

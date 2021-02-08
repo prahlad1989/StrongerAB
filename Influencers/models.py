@@ -11,7 +11,6 @@ class InfluencerBase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
     updated_at = models.DateTimeField(verbose_name='Updated At',default=None, blank=True, null=True )
 
-
     class Meta:
         ordering = ["-created_at", "-updated_at"]
         indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
@@ -24,6 +23,8 @@ class OrderInfo(models.Model):
     status = models.CharField(choices= map(lambda x:(x,x), is_answered_choices), max_length=10)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
 
+class UserPreferences(InfluencerBase):
+    influe_field_preferences = models.TextField(verbose_name='Influencer Field Preferences')
 
 
 class Influencer(InfluencerBase):

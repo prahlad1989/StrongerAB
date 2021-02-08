@@ -42,6 +42,7 @@ urlpatterns = [
     path('updateCentraOrders', views.OrderUpdatesView.as_view(), name='updateCentraOrders'),
     path('updateCentraValidations', views.ValidationUpdatesView.as_view(), name='updateCentraValidations'),
     path('centraToDB', views.CentraToDB.as_view(), name= 'centraToDB'),
-    path('resetCentra', views.ResetCentra.as_view(), name='resetCentra')
+    path('resetCentra', views.ResetCentra.as_view(), name='resetCentra'),
+    path('influe_field_preferences', views.UserPreferences.as_view(), name='influe_field_preferences')
 
 ]

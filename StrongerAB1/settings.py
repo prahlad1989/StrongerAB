@@ -177,7 +177,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 STATICFILES_DIR = (
  	os.path.join(BASE_DIR,'Influencers/static'),
  )
-paid_unpaid_choices = ['','Paid','Unpaid','OK']
+paid_unpaid_choices = ['','Paid','Unpaid','ÖK']
 order_status_choices = ['', 'PENDING','CONFIRMED', 'PARTIAL', 'SHIPPED', 'ARCHIVED', 'DELETED' ]
 portals=[('',''), ('Linked In','Linked In'),('Indeed','Indeed'),('Glassdoor','Glassdoor'),('Other','Other')]
 b2b_mandatory_fields = ["Company Name", "Full Name", "Designation", "Email", "Linkedin ID", "Position", "Job Location", "Job Posting Links", "Company Website", "Company Linkedin" ]
@@ -190,8 +190,8 @@ adminMsg=" if you are not admin"
 
 influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
 #influencer_mandatory_fields =['Instagram Username','Country','Influencer/Prospect','ID']
-influencer_mandatory_fields =['Country','Influencer/Prospect','ID']
-is_influencer_choices = ["", "Prospect", "Influencer"]
+influencer_mandatory_fields =['Country','Influencer/Prospect','Email']
+is_influencer_choices = ["", "Prospect", "Influencer",'PR_']
 is_answered_choices = ["","Yes", "No"]
 centra_key = "2de0107b9b16e994f1894e514f031a21"
 centra_api_url = "https://stronger.centra.com/graphql"
