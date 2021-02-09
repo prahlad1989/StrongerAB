@@ -397,9 +397,11 @@
               });
             } */
 
+            var resultedFields = influe_field_preferences.length > 0 ? influencer_mandatory_fields.length+influe_field_preferences.length : influencerFieldsList.length;
 
+            var jsGridWidth = Math.max(resultedFields*8,100)+"%";
             $("#jsGridInfluencers").jsGrid({
-             width:Math.max((influencer_mandatory_fields.length+influe_field_preferences.length)*(8),100)+"%",
+             width:jsGridWidth,
              inserting:true,
              editing:true,
              sorting:true,
