@@ -169,7 +169,7 @@
       <!-- custom js -->
       <script src="static/js/custom.js"></script>
        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
-      <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
+      <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
 
       <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
@@ -179,7 +179,7 @@
       <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
 
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-      <script src=" http://benalman.com/code/projects/jquery-throttle-debounce/jquery.ba-throttle-debounce.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
       <script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Header/js/jquery.stickytableheaders.js"></script>
       <!-- google map js -->
 
@@ -670,13 +670,13 @@
             $(this.hash).hide();
          }
        });
-
        menuList.click(function(e){
                 e.preventDefault();
                 hashValue = this.hash;
+
            menuList.each(function(){
             if(this.hash == hashValue){
-               if(hashValue == "#all_influencers"){
+               if(hashValue == "#all_influencers" && $(this).parent().hasClass("active")){
                   window.open("/");
                }else{
                   $(this.hash).show();
