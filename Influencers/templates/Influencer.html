@@ -421,16 +421,18 @@
                      url: "influencer",
                      data: item,
                      headers:{"X-CSRFToken": '{{ csrf_token }}'},
-                     error: function (data){
-                         alert(data.statusText);
+                     error: function (response){
+                          if(response.responseJSON){
+                                alert(response.responseJSON.error+" "+response.statusText);
+                           }else{
+                            alert(response.statusText);
+                          }
                      },
                      success: function(data){
                          grid.jsGrid("option","pageIndex",1);
                          grid.jsGrid("loadData");
-                     },
-                      error:function(data){
-                         alert(data.statusText);
-                     },
+                     }
+
                  });
              },
 

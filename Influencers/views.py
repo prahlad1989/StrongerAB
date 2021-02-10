@@ -90,10 +90,19 @@ class BaseView(View):
         form = self._getForm(request)
         #logger.info("form is {0}".format(form))
         logger.error("form errors {0}".format(form.errors))
-        #check if already record exists with email
-
+        #check if prospect already record exists with email
+        messages = []
         object = form.save(commit=False)
-        rows = self.model.objects.filter(Q(email__iexact=object.email))
+        if object.email and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(email=object.email) & Q(is_influencer=object.is_influencer)).exists():
+                messages.append(object.is_influencer + " with email " + object.email + " : " + "already exists")
+        if len(messages) > 0:
+            try:
+                raise ValidationError(messages)
+            except ValidationError as  err:
+                logger.error(err.messages)
+                return JsonResponse({"error": err.messages}, status=500)
+
+        rows = self.model.objects.filter(Q(email__iexact=object.email) )
         if rows and len(rows) > 0:
             object.is_duplicate = True
         object.created_by = request.user
@@ -260,6 +269,9 @@ class Influencers(BaseView):
         fields = self.model._meta.get_fields()
         if request.FILES:
             csv_file = request.FILES['myfile']
+            # semicolonin = csv.reader(csv_file, delimiter=';')
+            # fileOut = open("123.csv","w")
+            # commaout = csv.writer(fileOut, delimiter=',')
             rows = list(csv.DictReader(io.StringIO(csv_file.read().decode('utf-8'))))
         else:
             rows = json.loads(request.body)
@@ -505,6 +517,7 @@ class InfluencersQuery(View):
                           InfluencerModel.order_code.field_name,
                           InfluencerModel.date_of_promotion_on.field_name,
                           InfluencerModel.influencer_name.field_name,
+                          InfluencerModel.paid_or_unpaid.field_name,
                           InfluencerModel.channel_username.field_name,
                           InfluencerModel.followers_count.field_name,
                           InfluencerModel.country.field_name,
