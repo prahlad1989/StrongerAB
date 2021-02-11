@@ -305,9 +305,30 @@ class Influencers(BaseView):
                         messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
                 elif ("date" in key.lower() or "day" in key.lower()) and value :
                     try:
-                        test = value = datetime.fromisoformat(value).date()
+                        value = datetime.fromisoformat(value).date()
                     except Exception as e:
                         messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
+
+                for x in [InfluencerModel.followers_count, InfluencerModel.commission]:
+                    field = InfluencerModel._meta.get_field(x.field_name)
+                    if key == field.verbose_name and value:
+                        try:
+                            value = float(value)
+                        except Exception as e:
+                            messages.append(key + "  " + value + " : " + "can't convert to number"+ " at row: {0};\n".format(index))
+                for x in [InfluencerModel.comments, InfluencerModel.order_num, InfluencerModel.order_code, InfluencerModel.discount_couponm ,InfluencerModel.channel]:
+                    field = InfluencerModel._meta.get_field(x.field_name)
+                    if key == field.verbose_name and value and len(value) > field.max_length:
+                        messages.append(
+                            "for " + key + "  " + value + " : " + "should not be more than {0} chars at row: {1};\n".format(
+                                field.max_length, index))
+                # elif key in [InfluencerModel.comments.verbose_name]:
+                #
+                #     if len(value) > 500:
+                #         messages.append(
+                #             "for " + key + "  " + value + " : " + "should not be more than 500 chars at row: {0};\n".format(
+                #                 index))
+
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
@@ -546,8 +567,11 @@ class InfluencersQuery(View):
         for k, v in requestBody.items():
             if isinstance(v, bool) and v:
                 searchParams[k] = v
+
             elif isinstance(v, str) and len(v) > 0:
                 if k in ['sortOrder', 'sortField']:
+                    searchParams[k] = v
+                elif k in ['paid_or_unpaid'] and v:
                     searchParams[k] = v
                 elif k == 'created_by':
                     k = "created_by__username"
@@ -561,6 +585,7 @@ class InfluencersQuery(View):
                 searchParams['created_at__lte'] = datetime.fromtimestamp(v) + timedelta(1)
             elif k in ['pageIndex', 'pageSize']:
                 searchParams[k] = v
+
             elif "_on" in k and v:
                 searchParams[k+"__gte"] = datetime.fromtimestamp(v).date()
                 searchParams[k + "__lte"] = datetime.fromtimestamp(v).date() + timedelta(1)

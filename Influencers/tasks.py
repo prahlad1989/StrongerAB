@@ -160,7 +160,6 @@ class CentraToDB(OrdersUpdate2):
             last_sync_at = last_sync_at[0].value
             last_sync_at = datetime.strptime(last_sync_at, self.timeFormat ).astimezone(timezone.utc)
             logger.debug("last processed order exists as {0} ".format(last_sync_at))
-
         else:
             logger.debug("not processed previously")
             last_sync_at = datetime.strptime( centra_api_start_date,"%Y-%m-%d").astimezone(timezone.utc)
@@ -201,7 +200,6 @@ class CentraToDBAllOrders(CentraToDB):
         api_query_params["orderStartDate"] = orderStartDate.strftime(self.timeFormat)
         api_query_params["orderEndDate"] = orderEndDate.strftime(self.timeFormat)
         orderInfoList =[]
-
         while True:
             try:
                 resp = client.execute(query=graphQlQuery, variables=api_query_params)

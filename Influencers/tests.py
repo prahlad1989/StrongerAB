@@ -2,7 +2,7 @@ import json
 
 from django.db.models import Q
 
-from Influencers.models import Influencer, Constants
+from Influencers.models import Influencer, Constants, OrderInfo, Country
 from Influencers.tasks import OrdersUpdate, CouponValidationUpdate, OrdersUpdate2,CentraToDB
 from logging import getLogger
 from django.test import TestCase
@@ -22,7 +22,7 @@ logger = getLogger(__name__)
 #         self.assertTrue(object['number']=="123", msg="correct")
 #
 
-
+#
 # class ValidationUpdateTest(TestCase):
 #     def setUp(self):
 #
@@ -40,6 +40,8 @@ logger = getLogger(__name__)
 #                                   discount_coupon="MECENAT15", valid_from=timezone.now() - timedelta(100),
 #                                   valid_till=timezone.now() + timedelta(10))
 #
+#
+#
 #     def testNonEmptyCoupons(self):
 #         influencerList = Influencer.objects.filter(
 #             ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
@@ -55,7 +57,7 @@ logger = getLogger(__name__)
 #         for obj in objects:
 #             if obj.valid_from is None or obj.valid_till is None:
 #                 self.assertTrue(2==3, "failed")
-#
+
 # class OrdersUpdateTest(TestCase):
 #     def setUp(self):
 #         #Influencer.objects.create(is_influencer=True, email="abc@gmail.com", country='India', influencer_name='test_name1',discount_coupon= "KRISTINAM20", valid_from=timezone.now() -timedelta(100), valid_till=timezone.now()+timedelta(10) )
@@ -81,9 +83,29 @@ class CentraToDBTest(TestCase):
     def setup(self):
         pass
 
-    def testCentraToDB(self):
-        obj = CentraToDB()
-        obj.update()
+    def testOrder_country(self):
+        orderInfo = OrderInfo()
+        orderInfo.orderDate=datetime.utcnow()
+        orderInfo.number=1
+        country = Country()
+        country.id= 123
+        country.name='india'
+        orderInfo.country = country
+        orderInfo.save()
+
+        orderInfo2 = OrderInfo()
+        orderInfo2.orderDate = datetime.utcnow()
+        orderInfo2.number = 2
+        orderInfo2.country=country
+        orderInfo.save()
+
+        orders = OrderInfo.objects.all()
+        self.assertTrue(len(orders)==2, "good")
+
+
+    # def testCentraToDB(self):
+    #     obj = CentraToDB()
+    #     obj.update()
 
 
 

@@ -16,7 +16,11 @@ class InfluencerBase(models.Model):
         indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
 
 class Country(models.Model):
-    pass
+    id = models.IntegerField(unique=True,primary_key=True)
+    name=models.CharField(max_length=80)
+    code = models.CharField(max_length=10)
+    continent = models.CharField(max_length=20)
+    isEU =models.BooleanField()
 
 class OrderInfo(models.Model):
     number = models.IntegerField()
@@ -24,6 +28,7 @@ class OrderInfo(models.Model):
     discount_coupons = models.CharField(max_length=100, null=True)
     grandTotal = models.FloatField()
     status = models.CharField(choices= map(lambda x:(x,x), is_answered_choices), max_length=10)
+    country = models.ForeignKey(Country,on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='country_of_order')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
 
 class UserPreferences(InfluencerBase):
@@ -40,7 +45,7 @@ class Influencer(InfluencerBase):
     is_answered = models.CharField( verbose_name='Answered', choices=is_answered_choices, max_length=5, null=True, blank=True)
     last_contacted_on = models.DateField(verbose_name='Last Contacted Date', null=True)
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
-    order_num = models.CharField(null=True, blank=True, verbose_name='Order Number',max_length=20)
+    order_num = models.CharField(null=True, blank=True, verbose_name='Order Number',max_length=50)
     order_code = models.CharField(null=True, blank=True, verbose_name='Order Code', max_length=50)
     date_of_promotion_on = models.DateField(verbose_name='Day of Promotion', null=True)
     influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
@@ -48,7 +53,7 @@ class Influencer(InfluencerBase):
                                 verbose_name='Paid/UnPaid', blank=True)
     channel_username =  models.CharField( max_length=100, verbose_name='Instagram Username', null=True)
     followers_count =  models.IntegerField(null=True, verbose_name='Followers')
-    channel = models.CharField( max_length=2000, verbose_name='Channel',  null=True)
+    channel = models.CharField( max_length=200, verbose_name='Channel',  null=True)
     country = models.CharField(null=False, verbose_name='Country',max_length=100)
     collection = models.CharField(null=True, verbose_name='Collection', max_length=100)
     discount_coupon = models.CharField(null=True, verbose_name='Discount code', max_length=100)
@@ -61,7 +66,7 @@ class Influencer(InfluencerBase):
     revenue_click = models.FloatField( verbose_name='Revenue Qlik', null=True, default=0)
     #roi = models.FloatField(verbose_name='ROI', null=True)
     currency = models.CharField(max_length=20, verbose_name='Currency', null=True)
-    comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments')
+    comments = models.TextField(default="", blank=True, null=True, verbose_name='Comments', max_length=500)
     is_old_record = models.BooleanField(default=False,null=True, verbose_name='Is Old Record?')
     centra_update_at = models.DateTimeField(verbose_name='Centra Update At', blank=True, null=True)
 
