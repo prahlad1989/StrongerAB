@@ -1,0 +1,409 @@
+body {
+	font-family: Nunito, 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-size: 100%;
+	margin: 0;
+	color: #202124;
+}
+
+a:link, a:visited {
+	color: #0e0080;
+	text-decoration: none;
+}
+a:hover {
+	color: red;
+}
+table {
+	width: 100%;
+}
+th {
+	text-align: left;
+	padding: 0.5rem 0.6rem;
+}
+th a {
+	text-decoration: none;
+}
+th a.active {
+	text-decoration: underline;
+}
+tr:nth-child(even) {
+	background: #f1f1f1;
+}
+tr:hover {
+	background-color: #e4e4e4;
+}
+td {
+	padding: 0.5rem 1rem;
+}
+td.date a {
+	background-color: #0E0080;
+    padding: 0.35rem 0.8rem;
+    color: #fff;
+    font-size: 70%;
+    border-radius: 0.5rem;
+    margin-right: 0.3rem;
+    font-weight: 700;
+}
+td.date a:hover {
+	background-color: #000;
+    color: #fff;
+}
+::placeholder {
+  color: #ccc;
+}
+.report-table {
+	font-size: 90%;
+}
+.report-table tfoot {
+	font-weight: 800;
+}
+.report-thumb {
+	margin: 0 .4rem 0 0;
+	border-radius: 50%;
+	width: 20px;
+	vertical-align: top;
+}
+
+input[type=submit] {
+  cursor: pointer;
+}
+label {
+	display: block;
+	padding: 2rem 0;
+	font-weight: 600;
+}
+label input {
+	display: block;
+	padding: 0.75rem 1rem;
+	margin-top: 1rem;
+	font-family: Nunito, 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-size: 100%;
+	min-width: 500px;
+}
+label span {
+	color: #ccc;
+	font-family: Nunito, 'Source Sans Pro', Helvetica, Arial, sans-serif;
+	font-size: 80%;
+}
+
+.header {
+	background-color: #27282c;
+	padding: 1rem 7%;
+}
+.header h1 {
+	color: #ffcdcd;
+	font-size: 70%;
+}
+.header .logo {
+	display: inline-block;
+	margin-right: 2rem;
+	vertical-align: top;
+}
+.header .logo:hover {
+	opacity: 0.7;
+	transition: 0.2s;
+}
+.header .logo svg {
+	width: 120px;
+	fill: #fff;
+	display: block;
+	margin-bottom: 0.2rem;
+	margin-top: 0.5rem;
+}
+.header .youtube {
+}
+.header .youtube img {
+	width: 50px;
+	margin-left: 0.7rem;
+	display: inline;
+	opacity: 0.95;
+}
+.header .youtube span {
+	color: #ffb0b0;
+	text-transform: uppercase;
+	font-weight: bold;
+	font-size: 50%;
+	line-height: 0;
+	display: inline-block;
+	vertical-align: top;
+	margin-top: 0.66rem;
+	margin-left: 0.4rem;
+	letter-spacing: 1px;
+}
+.header .search-box {
+	display: inline-block;
+}
+.header .search-box form {
+	margin: 0;
+}
+.menu {
+	display: inline-block;
+}
+.menu ul {
+	float: left;
+	list-style: none;
+}
+.menu ul li {
+	float: left;
+}
+.menu ul a {
+	color: #fff;
+	padding: 1.2rem 1.4rem;
+	border-radius: 3px;
+	font-size: 100%;
+	font-weight: 700;
+	text-shadow: 1px 1px black;
+}
+.menu ul a:hover {
+	background-color: #fff;
+	color: #000;
+	text-shadow: 1px 1px white;
+}
+
+.full-width-content {
+	padding: 0;
+	margin: 0;
+}
+.content {
+	margin: 7vh auto 7%;
+	max-width: 1200px;
+}
+
+.header .button {
+	padding: 1.4rem 1.3rem;
+	background-color: #3a3a3a;
+	color: #fff;
+	border: 0;
+	border-radius: 3px;
+	vertical-align: top;
+	cursor: pointer;
+}
+.header .button:hover {
+	background-color: #000;
+}
+.header .button svg {
+	fill: #fff;
+	width: 1rem;
+	height: 1rem;
+}
+.button-m {
+	color: #fff;
+	margin: 1rem;
+	padding: 1rem 3rem;
+	background-color: #2a00ff;
+	display: inline-block;
+	border-radius: 3rem;
+	font-weight: 700;
+	min-width: 70px;
+	text-align: center;
+	border: 0;
+	cursor: pointer;
+}
+.button-m:hover {
+	background-color: #000;
+}
+a.button-m {
+	color: #fff;
+}
+
+.search-box {
+	padding: 0 0 0 2rem;
+	vertical-align: top;
+	width: 30%;
+	min-width: 250px;
+}
+.search-box h3 {
+	display: inline-flex;
+}
+.search-box .search-phrase {
+	padding: 1.1rem 1.5rem;
+	width: calc(100% - 4rem);
+	letter-spacing: 0.02rem;
+	border-radius: 2px;
+	border: 1px solid #fff;
+	font-weight: 800;
+	vertical-align: top;
+	outline: 0;
+	font-size: 110%;
+	font-family: 'Nunito';
+	color: #262729;
+	text-transform: capitalize;
+}
+
+.search-previous {
+	margin: 3rem 0;
+}
+
+.channel-thumb {
+	margin: 0 .7rem 0 0;
+	border-radius: 50%;
+	width: 20px;
+	vertical-align: middle;
+}
+
+
+/* Log in start */
+
+.login-background {
+	background-image: url('https://a.storyblok.com/f/86264/1125x1545/78cd4fe8c7/cush-hero-mobile.jpg');
+	height: auto;
+	background-position: center;
+    background-size: cover;
+    height: calc(100vh - 8vh);
+    padding-top: 8vh;
+}
+
+.login {
+	max-width: 250px;
+	margin: 0 auto;
+	background: rgba(0 0 0 / 50%);
+	padding: 3rem;
+	color: #fff;
+	border-radius: 0.2rem;
+}
+.login label {
+	font-weight: 800;
+	padding: 2rem 0 0.5rem 0;
+}
+.login-input {
+	min-width: 100%;
+	font-size: 100%;
+	border-radius: 0.1rem;
+	border: 0;
+	background-color: rgba(255,255,255,0.9);
+	letter-spacing: 0.05rem;
+}
+.login input[type=password] {
+	letter-spacing: 0.15em;
+}
+.login input[type=submit] {
+	width: 100%;
+	background-color: #2cb86c;
+	margin: 3rem auto;
+	letter-spacing: 0.02em;
+}
+.login input[type=submit]:hover {
+	background-color: #25a24a;
+	transition: 0.3s;
+}
+.login input[type=submit]:focus {
+	outline: 0;
+}
+
+
+/* Log in end */
+
+
+.header-icon {
+	margin: 0 1.5rem 0 0;
+	width: 80px;
+	vertical-align: middle;
+}
+.graph {
+	width: 80%;
+	text-align: center;
+	margin: 0 auto;
+}
+
+
+/* Profile/brand page */
+.channel-image {
+	margin: 0 1.5rem 0 0;
+	border-radius: 50%;
+	width: 80px;
+	vertical-align: middle;
+}
+.channel-data {
+	display: inline-block;
+	border-radius: 10%;
+	vertical-align: middle;
+	width: calc(100% - 80px - 2rem);
+}
+.channel-data.no-thumb {
+	width: 100% !important;
+}
+.channel-data h2 {
+	margin: 0 0 1rem 0;
+	font-size: 1.7em;
+}
+.channel-data h2 span {
+	font-size: 60%;
+    margin-left: 0.3rem;
+    vertical-align: text-top;
+    color: #d0d0d0;
+    font-weight: 700;
+}
+
+
+
+.content-header {
+	background-size: cover;
+}
+.content-header .channel-background {
+	opacity: 0.95;
+	background-color: #fbfafa;
+	padding: 6vh 7%;
+	background-size: cover;
+}
+.content-header .channel-data div {
+	margin: 0 4% 1rem 0;
+	display: inline-block;
+	vertical-align: middle;
+	font-size: 90%;
+	font-weight: normal;
+	text-align: center;
+}
+.content-header .channel-data div span {
+	font-weight: normal;
+	color: #ff7dad;
+	font-size: 115%;
+	margin-left: 0.2rem;
+}
+.content-header .channel-data .yt-link {
+	white-space: nowrap;
+	width: 200px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin: 0;
+	display: block;
+	font-size: 80%;
+	text-align: left;
+}
+.content-header .profile-channel .yt-link span {
+	margin-left: 0;
+}
+/* Profile page End */
+
+
+
+/* Front page */
+.front-page {
+	width: 100%;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-around;
+}
+.front-page h2 a {
+	color: #000;
+}
+.front-page div {
+	width: auto;
+	padding: 3% 7%;
+    border-radius: 3px;
+}
+.front-page div ul {
+	line-height: 1.6rem;
+	padding: 0 1.5rem;
+}
+.front-page div ul li {
+	list-style-type: none;
+}
+.front-page .youtubers {
+    background-color: #eff9fd;
+}
+.front-page .brands {
+	background-color: #edfbf7;
+}
+.front-page .brand-list {
+	background-color: #f9f8ff;
+}
+/* Front page end */

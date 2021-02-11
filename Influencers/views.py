@@ -94,7 +94,7 @@ class BaseView(View):
         messages = []
         object = form.save(commit=False)
         if object.email and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(email=object.email) & Q(is_influencer=object.is_influencer)).exists():
-                messages.append(object.is_influencer + " with email " + object.email + " : " + "already exists")
+                messages.append(object.is_influencer + " with email: " + object.email + " " + "already exists")
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
@@ -269,10 +269,10 @@ class Influencers(BaseView):
         fields = self.model._meta.get_fields()
         if request.FILES:
             csv_file = request.FILES['myfile']
-            # semicolonin = csv.reader(csv_file, delimiter=';')
-            # fileOut = open("123.csv","w")
-            # commaout = csv.writer(fileOut, delimiter=',')
-            rows = list(csv.DictReader(io.StringIO(csv_file.read().decode('utf-8'))))
+            file_contents = csv_file.read().decode('utf-8')
+            sniffer = csv.Sniffer()
+            delimiter = sniffer.sniff(file_contents)
+            rows = list(csv.DictReader(io.StringIO(file_contents),dialect=delimiter))
         else:
             rows = json.loads(request.body)
 

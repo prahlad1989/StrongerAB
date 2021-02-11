@@ -15,6 +15,9 @@ class InfluencerBase(models.Model):
         ordering = ["-created_at", "-updated_at"]
         indexes = [models.Index(fields=[ '-created_at', '-updated_at', 'created_by'])]
 
+class Country(models.Model):
+    pass
+
 class OrderInfo(models.Model):
     number = models.IntegerField()
     orderDate = models.DateTimeField()

@@ -187,6 +187,62 @@ class CentraToDB(OrdersUpdate2):
         logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
 
 
+class CentraToDBAllOrders(CentraToDB):
+    def sync_orders(self, dateRange, totalOdersDict):
+        graphQlQuery = self.graphQlQuery
+        client = self.client
+        orderStartDate = dateRange[0]
+        orderEndDate = dateRange[1]
+        logger.info(
+            "starting order sync for start {0} at end {1}".format(dateRange[0],dateRange[1]))
+        tic = time.time()
+        api_query_params = {}
+        api_query_params['pageNumber'] = 1
+        api_query_params["orderStartDate"] = orderStartDate.strftime(self.timeFormat)
+        api_query_params["orderEndDate"] = orderEndDate.strftime(self.timeFormat)
+        orderInfoList =[]
+
+        while True:
+            try:
+                resp = client.execute(query=graphQlQuery, variables=api_query_params)
+                time.sleep(1)
+                orders = resp['data']['orders']
+                logger.debug("orders  length {0}".format(len(orders)))
+                for order in orders:
+                    orderInfo = OrderInfo()
+                    orderInfo.number = order['number']
+                    orderInfo.status = order["status"]
+                    orderInfo.grandTotal = round(order["grandTotal"]["value"]*order["currencyBaseRate"])
+                    logger.debug("order details  {0}".format(order))
+                    orderInfo.orderDate = order['orderDate']
+                    if order["discountsApplied"]:
+                        expr = parse('$.discountsApplied[*].discount.code')
+                        values = expr.find(order)
+                        values = list(map(lambda x: x.value, values))
+                        logger.debug("discount coupons {0} ".format(values))
+                        if not values[0]:
+                            logger.debug("has no discounts")
+                            continue
+                    orderInfo.discount_coupons = values[0]
+
+                    orderInfoList.append(orderInfo)
+                if orders:
+                        api_query_params['pageNumber'] = api_query_params['pageNumber'] + 1
+                        logger.debug("pageNumber incremented to {0}".format(api_query_params['pageNumber']))
+                        logger.debug("trying to bulk insert")
+                        OrderInfo.objects.bulk_create(orderInfoList)
+                        logger.info("created {0} objects".format(len(orderInfoList)))
+                        orderInfoList.clear()
+                else:
+                    logger.info("processed all orders for a thread.")
+                    break
+            except Exception as e:
+                logger.exception(e)
+                raise e
+
+
+
+
 @background(schedule=1*60)
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
