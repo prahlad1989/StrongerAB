@@ -309,14 +309,14 @@ class Influencers(BaseView):
                     except Exception as e:
                         messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
 
-                for x in [InfluencerModel.followers_count, InfluencerModel.commission]:
+                for x in [InfluencerModel.followers_count, InfluencerModel.commission, InfluencerModel.product_cost]:
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value:
                         try:
                             value = float(value)
                         except Exception as e:
                             messages.append(key + "  " + value + " : " + "can't convert to number"+ " at row: {0};\n".format(index))
-                for x in [InfluencerModel.comments, InfluencerModel.order_num, InfluencerModel.order_code, InfluencerModel.discount_couponm ,InfluencerModel.channel]:
+                for x in [InfluencerModel.comments, InfluencerModel.order_num, InfluencerModel.order_code, InfluencerModel.discount_coupon ,InfluencerModel.channel]:
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value and len(value) > field.max_length:
                         messages.append(

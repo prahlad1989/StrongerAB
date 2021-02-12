@@ -36,7 +36,10 @@ class OrdersUpdate(CentraUpdate):
                      number 
                      createdAt
                      currencyBaseRate
-                     status 
+                     status
+                     country{
+                      ...country_frag
+                    } 
                      grandTotal(includingTax: false){ 
                         ...monetary }
                      discountsApplied{
@@ -48,6 +51,13 @@ class OrdersUpdate(CentraUpdate):
                     } 
 
                     }
+                    fragment country_frag on Country{
+                        id
+                        name
+                        code
+                        continent
+                        isEU
+                    } 
 
                     fragment monetary on MonetaryValue { 
       										value 
@@ -210,6 +220,7 @@ class CentraToDBAllOrders(CentraToDB):
                     orderInfo = OrderInfo()
                     orderInfo.number = order['number']
                     orderInfo.status = order["status"]
+                    orderInfo.country = order['country']['name']
                     orderInfo.grandTotal = round(order["grandTotal"]["value"]*order["currencyBaseRate"])
                     logger.debug("order details  {0}".format(order))
                     orderInfo.orderDate = order['orderDate']
@@ -245,7 +256,7 @@ class CentraToDBAllOrders(CentraToDB):
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
 
-    centraToDB  = CentraToDB()
+    centraToDB  = CentraToDBAllOrders()
     try:
         tic = time.time()
         logger.debug("DB update started at {0}".format(datetime.utcnow()))

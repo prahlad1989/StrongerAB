@@ -3,8 +3,6 @@ from django.db import models
 from StrongerAB1.settings import portals as portal_choices, is_influencer_choices
 from StrongerAB1.settings import paid_unpaid_choices,influencer_post_status, is_answered_choices
 
-
-
 class InfluencerBase(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='created_by_user')
     updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='updated_by_user')
@@ -28,7 +26,7 @@ class OrderInfo(models.Model):
     discount_coupons = models.CharField(max_length=100, null=True)
     grandTotal = models.FloatField()
     status = models.CharField(choices= map(lambda x:(x,x), is_answered_choices), max_length=10)
-    country = models.ForeignKey(Country,on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name='country_of_order')
+    country = models.CharField(max_length=70, null=False)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created At')
 
 class UserPreferences(InfluencerBase):
@@ -60,7 +58,7 @@ class Influencer(InfluencerBase):
     valid_from = models.DateTimeField(verbose_name='Valid From', null=True)
     valid_till = models.DateTimeField(verbose_name='Valid Till', null=True)
     status = models.CharField(max_length=30, default=None, null=True, verbose_name='Status',choices=post_status)  # need to be correctd
-    commission = models.CharField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
+    commission = models.FloatField(max_length=10, verbose_name='Fixed Fee/Commission', null=True)
     product_cost = models.FloatField( verbose_name='Product Cost', null=True)
     revenue_analysis = models.FloatField(verbose_name='Revenue Analysis', null=True, default=0)
     revenue_click = models.FloatField( verbose_name='Revenue Qlik', null=True, default=0)
