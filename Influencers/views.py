@@ -13,8 +13,8 @@ from django.contrib.auth import login, logout as log_out
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.db.models import Q, Count
+from django.db import transaction, connection
+from django.db.models import Q, Count, Sum
 from django.forms import forms, model_to_dict
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, StreamingHttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
@@ -38,6 +38,10 @@ logger = logging.getLogger(__name__)
 
 class Index(TemplateView):
     template_name = 'index.html'
+
+def reportPage(request):
+    args = dict()
+    return render(request, 'report.html',args)
 
 class Login(TemplateView):
     template_name = 'user_login.html'
@@ -309,7 +313,7 @@ class Influencers(BaseView):
                     except Exception as e:
                         messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
 
-                for x in [InfluencerModel.followers_count, InfluencerModel.commission, InfluencerModel.product_cost]:
+                for x in [InfluencerModel.followers_count, InfluencerModel.commission, InfluencerModel.product_cost, InfluencerModel.revenue_analysis, InfluencerModel.revenue_click]:
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value:
                         try:
@@ -498,7 +502,6 @@ def getUserPrefs(user):
         logger.info("usef prefs for {0} not exists yet".format(user.get_username()))
 
 
-
 class InfluencersQuery(View):
 
     @method_decorator(login_required)
@@ -507,23 +510,10 @@ class InfluencersQuery(View):
 
     model = InfluencerModel
 
-
-
     def getDateFields(self):
         return []
         # fields = self.model._meta.get_fields()
         # for field in fields:
-
-    # def fields_as_per_prefs(self, user):
-    #     resultFields = []
-    #     total_fields = self.fields_in_response
-    #     user_prefs = getUserPrefs(user)
-    #     user_prefs_columns = list(map(lambda x:x['Name'],user_prefs))
-    #     if not user_prefs_columns:
-    #         return total_fields
-    #     else:
-    #
-    # leads search
     fields_in_response = ('id',
                           InfluencerModel.is_influencer.field_name,
                           'created_by__username',
@@ -618,3 +608,57 @@ class InfluencersQuery(View):
         records = query.values(*self.fields_in_response)[offSet:limitEnds]
         recordsJSON = {"data": list(records), "itemsCount": count}
         return JsonResponse(recordsJSON, safe=False, status=200)
+
+
+
+class SalesReport(View):
+    def get(self,request,*args,**kwargs):
+        # start_date = request.GET['start_date']
+        # end_date = request.GET['end_date']
+        start_date = datetime.today()-timedelta(100)
+        end_date = datetime.today()
+
+
+        # if not start_date and not end_date:
+        #     return HttpResponse("Invalid input",status=404)
+        # else:
+        #     start_date = datetime.fromtimestamp(start_date,tz=timezone.utc)
+        #     end_date = datetime.fromtimestamp(end_date,tz=timezone.utc)
+
+
+        influe_vouchers = InfluencerModel.objects.values(InfluencerModel.discount_coupon.field_name).distinct()
+        orders = OrderInfo.objects.filter(Q(orderDate__gte = start_date) & Q(orderDate__lte = end_date) & Q(grandTotal__gt = 0))
+        country_field_name = InfluencerModel.country.field_name
+        country_sales = orders.values(country_field_name).annotate(sales = Sum('grandTotal')).order_by(country_field_name)
+        country_sales_vouchers_dict= dict()
+        cursor = connection.cursor()
+        rows = []
+        try:
+            cursor.execute("select o1.country, sum(o1.\"grandTotal\") as sales, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country group by o1.country and o1.orderDate >= {0} and o1.orderDate <= {1} having sum(o1.\"grandTotal\") >0 ")
+            while True:
+                row = cursor.fetchone()
+                country_sales_vouchers_dict[row[0]] =  row
+
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
+        logger.info("update revenue click complete")
+        country_sales_vouchers =  orders.filter(Q(discount_coupons__in= influe_vouchers) ).values(country_field_name).annotate(sales = Sum('grandTotal')).order_by(country_field_name)
+
+
+        #,commissions= Sum('commission'),product_cost = Sum('product_cost')
+        country_sales_vouchers_dict = {}
+        for _ in country_sales_vouchers:
+            _country = _[country_field_name]
+            _sales = _['sales']
+            country_sales_vouchers_dict[_country] =  _sales
+
+        for _ in country_sales:
+            _country = _[country_field_name]
+            _sales = _['sales']
+
+
+
+
+
