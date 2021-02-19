@@ -1,6 +1,7 @@
 import codecs
 import csv
 import io
+from collections import Set
 
 import email_validator
 import itertools
@@ -33,9 +34,15 @@ from StrongerAB1.settings import adminMsg
 from StrongerAB1.settings import b2b_mandatory_fields
 from StrongerAB1.settings import influencer_mandatory_fields
 import re
+
+from .SalesInfo import SalesInfo
 from .tasks import centraOrdersUpdate,centraToDBFun
 logger = logging.getLogger(__name__)
 
+
+
+sql_datetime_format = "%Y-%m-%d %H:%M:%S"
+sql_date_format = "%Y-%m-%d"
 class Index(TemplateView):
     template_name = 'index.html'
 
@@ -284,8 +291,6 @@ class Influencers(BaseView):
         mandatoryFields = influencer_mandatory_fields
         index = 0
         messages = []
-        emailValidationRE = "^([a-zA-Z0-9_.+-])+\@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$"
-
         #striping all the data by removing spaces
         def y(row):
             rowDict = dict()
@@ -294,19 +299,22 @@ class Influencers(BaseView):
             return rowDict;
 
         rows = list(map(lambda x:y(x),rows))
+        isHeadersChecked = False
         for row in rows:
+            if not isHeadersChecked:
+                isHeadersChecked = True
+                rowKeysSet = set(row.keys())
+                mandatoryKeysSet = set(mandatoryFields)
+                missingMandatoryFields = mandatoryKeysSet.difference(rowKeysSet)
+                if missingMandatoryFields:
+                    messages.append("missing mandatory headers {0}".format(missingMandatoryFields))
+                    break
+
 
             index += 1
             for key, value in row.items():
-                if key in mandatoryFields and not value.strip():
+                if key in mandatoryFields and not value:
                     messages.append(key + " is mandatory at row: {0};\n".format(index))
-                if key == 'Email':
-                    try:
-                        match = re.match(emailValidationRE,value)
-                        if not match:
-                            raise email_validator.EmailNotValidError("Not a proper email format")
-                    except email_validator.EmailNotValidError as err:
-                        messages.append(key + "  "+value+" : "+err.__str__()+" at row: {0};\n".format(index))
                 elif ("date" in key.lower() or "day" in key.lower()) and value :
                     try:
                         value = datetime.fromisoformat(value).date()
@@ -317,6 +325,8 @@ class Influencers(BaseView):
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value:
                         try:
+                            value = re.sub("[^\d,]","",value) #filtering shitty values which have 'kr', space, and commas in values
+                            value = re.sub(",", ".", value)
                             value = float(value)
                         except Exception as e:
                             messages.append(key + "  " + value + " : " + "can't convert to number"+ " at row: {0};\n".format(index))
@@ -338,7 +348,7 @@ class Influencers(BaseView):
                 raise ValidationError(messages)
             except ValidationError as  err:
                 logger.error(err.messages)
-                return JsonResponse({"error": err.messages}, status=500)
+                return JsonResponse({"error": err.messages}, status=422)
 
 
         index =0
@@ -355,7 +365,7 @@ class Influencers(BaseView):
                 raise ValidationError(messages)
             except ValidationError as  err:
                 logger.error(err.messages)
-                return JsonResponse({"error": err.messages}, status=500)
+                return JsonResponse({"error": err.messages}, status=422)
 
         emailsInRows = map(lambda x: x['Email'], rows)
         if 'filterDuplicates' in request.GET and request.GET['filterDuplicates'] == 'true':
@@ -375,12 +385,15 @@ class Influencers(BaseView):
                                 value = datetime.fromisoformat(row[field.verbose_name]).date()
 
                             elif field.get_internal_type() in ['FloatField','IntegerField']:
-                                _value = row[field.verbose_name].replace(",","").replace("kr","").replace(" ","")
+                                _value = row[field.verbose_name]
+                                _value = re.sub("[^\d,]", "", _value)
+                                _value = re.sub(",", ".", _value)
+                                _value = float(_value)
                                 #logger.info("value is {0}".format(_value))
                                 if _value:
                                     value = _value
                             else:
-                                value = row[field.verbose_name]
+                                value = row[field.verbose_name].strip()
                             #logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
                             model.__setattr__(field.attname, value)
 
@@ -617,8 +630,6 @@ class SalesReport(View):
         # end_date = request.GET['end_date']
         start_date = datetime.today()-timedelta(100)
         end_date = datetime.today()
-
-
         # if not start_date and not end_date:
         #     return HttpResponse("Invalid input",status=404)
         # else:
@@ -626,38 +637,79 @@ class SalesReport(View):
         #     end_date = datetime.fromtimestamp(end_date,tz=timezone.utc)
 
 
-        influe_vouchers = InfluencerModel.objects.values(InfluencerModel.discount_coupon.field_name).distinct()
-        orders = OrderInfo.objects.filter(Q(orderDate__gte = start_date) & Q(orderDate__lte = end_date) & Q(grandTotal__gt = 0))
-        country_field_name = InfluencerModel.country.field_name
-        country_sales = orders.values(country_field_name).annotate(sales = Sum('grandTotal')).order_by(country_field_name)
-        country_sales_vouchers_dict= dict()
-        cursor = connection.cursor()
+        #influe_vouchers = InfluencerModel.objects.values(InfluencerModel.discount_coupon.field_name).distinct()
+        country_sales_vouchers_dict= dict() # to use just for quick look up of grandtotal of countries
         rows = []
+        cursor = connection.cursor()
         try:
-            cursor.execute("select o1.country, sum(o1.\"grandTotal\") as sales, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country group by o1.country and o1.orderDate >= {0} and o1.orderDate <= {1} having sum(o1.\"grandTotal\") >0 ")
+            query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
+            cursor.execute(query)
             while True:
                 row = cursor.fetchone()
-                country_sales_vouchers_dict[row[0]] =  row
+
+                country_sales_vouchers_dict[row[0]] = row[1]
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
+
+        cursor = connection.cursor()
+        try:
+
+            costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_on >= \'{0}\' and date_of_promotion_on <= \'{1}\' group by i1.country".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
+            cursor.execute(costs_query)
+            while True:
+                row = cursor.fetchone()
+                country_name = row[0]
+                salesInfo = SalesInfo()
+                if country_name in country_sales_vouchers_dict:
+                    voucher_sales = country_sales_vouchers_dict[country_name]
+                    salesInfo.voucher_sales = voucher_sales
+                    salesInfo.product_cost = row[1]
+                    salesInfo.commission = row[2]
+                    # replace the dict value with new sales ifno obj
+                    country_sales_vouchers_dict[country_name ] = salesInfo
+                    logger.debug("updated commission and product cost")
+                else:
+                    salesInfo.voucher_sales = 0
+                    salesInfo.product_cost = row[1]
+                    salesInfo.commission = row[2]
+                    country_sales_vouchers_dict[country_name] = salesInfo
+                    logger.debug("updated commission and product cost with 0 sales")
 
         except Exception as e:
             logger.exception(e.__str__())
         finally:
             cursor.close()
-        logger.info("update revenue click complete")
-        country_sales_vouchers =  orders.filter(Q(discount_coupons__in= influe_vouchers) ).values(country_field_name).annotate(sales = Sum('grandTotal')).order_by(country_field_name)
 
-
-        #,commissions= Sum('commission'),product_cost = Sum('product_cost')
-        country_sales_vouchers_dict = {}
-        for _ in country_sales_vouchers:
-            _country = _[country_field_name]
-            _sales = _['sales']
-            country_sales_vouchers_dict[_country] =  _sales
+        orders = OrderInfo.objects.filter(Q(orderDate__gte=start_date) & Q(orderDate__lte=end_date))
+        country_field_name = InfluencerModel.country.field_name
+        # entire sales country wise , in the specified time period
+        country_sales = orders.values(country_field_name).annotate(sales=Sum('grandTotal'))
 
         for _ in country_sales:
-            _country = _[country_field_name]
+            _country_name = _[country_field_name]
             _sales = _['sales']
+            if _country_name in country_sales_vouchers_dict and type(country_sales_vouchers_dict[_country_name] == SalesInfo.__class__):
+                salesInfo = country_sales_vouchers_dict[_country_name]
+                salesInfo.country = _country_name
+                salesInfo.centra_sales = _['sales']
+                rows.append(salesInfo)
+            elif _country_name in country_sales_vouchers_dict :
+                salesInfo = SalesInfo()
+                salesInfo.country = _country_name
+                voucher_sales = country_sales_vouchers_dict[_country_name] # retrieve from dict
+                salesInfo.voucher_sales = voucher_sales
+                rows.append(salesInfo)
+            else:
+                salesInfo = SalesInfo()
+                salesInfo.country =_country_name
+                salesInfo.centra_sales = _['sales']
+                rows.append(salesInfo)
 
+        responseObj = dict()
+        responseObj['salesInfos'] = rows
+        return JsonResponse(responseObj, status=200, safe=False)
 
 
 

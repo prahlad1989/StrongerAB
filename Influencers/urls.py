@@ -43,6 +43,8 @@ urlpatterns = [
     path('updateCentraValidations', views.ValidationUpdatesView.as_view(), name='updateCentraValidations'),
     path('centraToDB', views.CentraToDB.as_view(), name= 'centraToDB'),
     path('resetCentra', views.ResetCentra.as_view(), name='resetCentra'),
-    path('influe_field_preferences', views.UserPreferences.as_view(), name='influe_field_preferences')
+    path('influe_field_preferences', views.UserPreferences.as_view(), name='influe_field_preferences'),
+    path('reports', views.reportPage, name='reports'),
+    path('sales_report',views.SalesReport.as_view(), name='sales_report')
 
 ]

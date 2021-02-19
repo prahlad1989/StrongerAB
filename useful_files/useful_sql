@@ -1,1 +1,34 @@
 update public."Influencers_influencer" set centra_update_at=NULL
+select o1.country, sum(o1."grandTotal") from  public."Influencers_orderinfo" o1  group by o1.country
+having sum(o1."grandTotal") >0 ;
+
+select o1.country, sum(o1."grandTotal") from  public."Influencers_orderinfo" o1  group by o1.country
+having sum(o1."grandTotal") >0 ;
+
+select o1.country, sum(o1."grandTotal") from public."Influencers_influencer" i1 inner join public."Influencers_orderinfo" o1 on i1.discount_coupon=o1.discount_coupons
+ group by o1.country having sum(o1."grandTotal") >0 ;
+;
+select o1.country, sum(o1."grandTotal") from public."Influencers_influencer" i1 inner join public."Influencers_orderinfo" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country
+ group by o1.country having sum(o1."grandTotal") >0 ;
+;
+
+select o1.country, sum(o1."grandTotal") from public."Influencers_influencer" i1 inner join public."Influencers_orderinfo" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country
+ group by o1.country having sum(o1."grandTotal") >0 ;
+;
+
+
+select  i1.discount_coupon, o1.discount_coupons from public."Influencers_influencer" i1 right outer join public."Influencers_orderinfo" o1 on i1.discount_coupon= o1.discount_coupons
+
+
+
+select o1.country, sum(o1."grandTotal") from  public."Influencers_orderinfo" o1 where o1."discount_coupons" in (select distinct(discount_coupon) from public."Influencers_influencer")  group by o1.country
+having sum(o1."grandTotal") >0 ;
+
+
+select o1.country, sum(o1."grandTotal") from  public."Influencers_orderinfo" o1  group by o1.country
+having sum(o1."grandTotal") >0 ;
+
+
+
+ select i1.country, sum(COALESCE(i1."commission",0)) as commission, sum(COALESCE(i1."product_cost",0)) as product_cost ,sum(COALESCE(i1."commission",0)+COALESCE(i1."product_cost",0)) as total_cost   from public."Influencers_influencer" i1 group by i1.country;
+

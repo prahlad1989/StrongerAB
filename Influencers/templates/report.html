@@ -1,0 +1,430 @@
+<html>
+<head>
+	<title>Collaborations - Reports - Stronger</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap');
+		@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;400;600;700;800&display=swap');
+	</style>
+	<link rel="stylesheet" href="static/css/style3.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="static/css/autocomplete.css" type="text/css" media="all" />
+	<link rel="icon" href="https://www.strongerlabel.com/favicon.ico?stronger" type="image/x-icon"/>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+	<script type="text/javascript" src="static/js/autocomplete.js"></script>
+	<style>
+		canvas{
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+		.chart-container {
+			width: 500px;
+			margin-left: 40px;
+			margin-right: 40px;
+			margin-bottom: 40px;
+		}
+		.container {
+			display: flex;
+			flex-direction: row;
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+	</style>
+</head>
+
+<body>
+
+<div class="full-width-content">
+	<section class="content-header" style="background-image: url('https://yt3.ggpht.com/4rT83zOzf5oKBK51ZvhYPd1HZHczEhNtpgPu09MwTEVzXnS2Xx8FcRJBsmqN5rQTOItvIkS-Pn0=w2560-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj') !important;">
+		<div class="channel-background">
+		<img src="static/images/icons/svg/reports.svg" class="header-icon">
+			<div class="channel-data">
+				<a href="" class="button-m" style="float: right;">Date picker</a>
+				<h2>Influencer Sales </h2>
+			</div>
+		</div>
+	</section>
+</div>
+
+<div class="content">
+<h2>Sales By Country</h2>
+
+<div id="sales_by_country"></div>
+
+<table class="report-table">
+	<thead>
+		<tr>
+			<th>Country</th>
+			<th><a href="" title="Centra Sales by Vouchers" class="active">Centra Sales</a></th>
+			<th><a href="">Commissions</a></th>
+			<th><a href="">Product Cost</a></th>
+			<th><a href="">Total Cost</a></th>
+			<th><a href="">ROAS</a></th>
+			<th><a href="">% of Total Sales</a></th>
+			<th>Influencer sales/country sales</th>
+			<th><a href="">Country Total Sales</a></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><img src="static/images/flags/sweden.png" class="report-thumb" alt="Sweden"><a href="">Sweden</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>2%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/germany.png" class="report-thumb" alt="Germany"><a href="">Germany</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/netherlands.png" class="report-thumb" alt="Netherlands"><a href="">Netherlands</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/belgium.png" class="report-thumb" alt="Belgium"><a href="">Belgium</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/united-states-of-america.png" class="report-thumb" alt="United States of America"><a href="">United States of America</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/united-kingdom.png" class="report-thumb" alt="United Kingdom"><a href="">United Kingdom</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/norway.png" class="report-thumb" alt="Norway"><a href="">Norway</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>5%</td>
+			<td>14 000 000</td>
+		</tr>
+		<tr>
+			<td><img src="static/images/flags/switzerland.png" class="report-thumb" alt="Switzerland"><a href="">Switzerland</a></td>
+			<td>1 000 000</td>
+			<td>100 000</td>
+			<td>30 000</td>
+			<td>130 000</td>
+			<td>7.69</td>
+			<td>1%</td>
+			<td>14 000 000</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>Total</th>
+			<td>8 000 000</td>
+			<td>800 000</td>
+			<td>240 000</td>
+			<td>1 040 000</td>
+			<td>7.69</td>
+			<td>10%</td>
+			<td>112 000 000</td>
+		</tr>
+	</tfoot>
+</table>
+
+<ul>
+	<li>Country - Top voucher sales countries</li>
+	<li>Centra Sales - Total sales from voucher from a country to the left</li>
+	<li>Commissions - Commission payed for the collaborations within given time for the specific country</li>
+	<li>Product Cost - Product cost column summerized for all collaborations from the specific country, during given timeperiod</li>
+	<li>Total Cost - Commissions + Product Cost</li>
+	<li>ROAS = Centra Sales - Total Cost</li>
+	<li>% of Total sales = Centra sales (per country) / all centra Sales (given timeperiod)</li>
+	<li>Influencer sales/country sales</li>
+	<li>Country Total Sales = All sales from the specific country (during given timeperiod)</li>
+
+</ul>
+
+<h2>Number of Collaborations</h2>
+<table>
+	<thead>
+		<tr>
+			<th>Country</th>
+			<th>Paid</th>
+			<th>Unpaid</th>
+			<th>ÖK</th>
+			<th>Total</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Sweden</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>Germany</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>Netherlands</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>Belgium</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>United States of America</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>United Kingdom</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>Norway</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+		<tr>
+			<td>Switzerland</td>
+			<td>22</td>
+			<td>44</td>
+			<td>11</td>
+			<td>77</td>
+		</tr>
+	</tbody>
+	<tfoot>
+		<tr>
+			<th>Total</th>
+			<td>1 000</td>
+			<td>900</td>
+			<td>300</td>
+			<td>1 000</td>
+		</tr>
+	</tfoot>
+</table>
+
+
+
+<h2>Paid vs Unpaid</h2>
+
+
+
+<div class="graph">
+  <div class="chart-legend">
+
+  </div>
+  <div class="chart">
+    <canvas id="myChart"></canvas>
+  </div>
+</div>
+
+
+<script>
+var ctx = document.getElementById('myChart').getContext('2d');
+
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['18 jan', '19 jan', '20 jan', '21 jan', '22 jan', '23 jan'],
+        datasets: [{
+            label: 'Collaborations',
+            data: [12, 9, 3, 5, 2, 3],
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(54, 162, 235, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(75, 192, 192, 0.2)',
+                'rgba(153, 102, 255, 0.2)',
+                'rgba(255, 159, 64, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(54, 162, 235, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(75, 192, 192, 1)',
+                'rgba(153, 102, 255, 1)',
+                'rgba(255, 159, 64, 1)'
+            ],
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        }
+    }
+});
+</script>
+
+
+
+<section class="search-results">
+
+	<h2>Mentions</h2>
+	<table>
+		<tr>
+			<th>Brand</th>
+			<th><a href="">Mentions</a></th>
+			<th>Views</th>
+			<th>Likes</th>
+			<th class="date"><a href="" title="Sort by date" class="active"/>Date </th>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Lululemon</a></td>
+			<td>1</td>
+			<td>50 000</td>
+			<td>4 000</td>
+			<td class="date"><a href="">30 oct, 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">NA-KD</a></td>
+			<td>4</td>
+			<td>157 156</td>
+			<td>4 000</td>
+			<td class="date">
+				<a href="https://www.youtube.com/watch?v=a91UKrgCzQA">15 oct 2020</a>
+				<a href="https://www.youtube.com/watch?v=a91UKrgCzQA">11 aug 2020</a>
+				<a href="https://www.youtube.com/watch?v=a91UKrgCzQA">10 feb 2020</a>
+			</td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Adidas</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">iDeal of Sweden</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">5 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Caia Cosmetics</a></td>
+			<td>5</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Aloyoga</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">iDeal of Sweden</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">5 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Caia Cosmetics</a></td>
+			<td>5</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Aloyoga</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">iDeal of Sweden</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">5 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Caia Cosmetics</a></td>
+			<td>5</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+		<tr>
+			<td><a href="brand.html">Aloyoga</a></td>
+			<td>1</td>
+			<td>36 972</td>
+			<td>4 000</td>
+			<td class="date"><a href="">10 oct 2020</a></td>
+		</tr>
+
+
+	</table>
+
+	<p><a href="profile-latest.html">View latest videos</a></p>
+
+
+
+</section>
+
+
+</div>
+
+
+
+</body>
+</html>

@@ -77,7 +77,6 @@ class OrdersUpdate(CentraUpdate):
                                   }
                     } """
 
-
 class OrdersUpdate2(OrdersUpdate):
     def update(self):
         cursor = connection.cursor()
@@ -94,7 +93,6 @@ class OrdersUpdate2(OrdersUpdate):
 @background(schedule=60*60)
 def centraOrdersUpdate(message):
     logger.info('initiated ordersupdate thread: ')
-
     try:
         logger.debug("order update started at {0}".format(datetime.utcnow()))
         ordersUpdate = OrdersUpdate2()
