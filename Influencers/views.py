@@ -330,7 +330,7 @@ class Influencers(BaseView):
                             value = float(value)
                         except Exception as e:
                             messages.append(key + "  " + value + " : " + "can't convert to number"+ " at row: {0};\n".format(index))
-                for x in [InfluencerModel.comments, InfluencerModel.order_num, InfluencerModel.order_code, InfluencerModel.discount_coupon ,InfluencerModel.channel]:
+                for x in [InfluencerModel.comments, InfluencerModel.order_num, InfluencerModel.order_code, InfluencerModel.discount_coupon ,InfluencerModel.channel,InfluencerModel.paid_or_unpaid]:
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value and len(value) > field.max_length:
                         messages.append(
@@ -368,7 +368,7 @@ class Influencers(BaseView):
                 return JsonResponse({"error": err.messages}, status=422)
 
         emailsInRows = map(lambda x: x['Email'], rows)
-        if 'filterDuplicates' in request.GET and request.GET['filterDuplicates'] == 'true':
+        if request.GET.get('filterDuplicates') == 'true':
             filterDuplicates = True
         duplicates = []
         createdLeadsCount = 0
