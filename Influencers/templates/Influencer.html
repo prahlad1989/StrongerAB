@@ -31,6 +31,12 @@
       <script src="../js/jquery.stickytableheaders.js" type="text/javascript"></script>
       <![endif]-->
    </head>
+   <style>
+       .ui-corner-all, .ui-corner-bottom, .ui-corner-right, .ui-corner-br {
+            border-radius: 0px !important;
+        }
+
+   </style>
 
    <body id="default_theme" class="home_page1" >
    <script>
@@ -184,7 +190,6 @@
 
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
-      <script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Header/js/jquery.stickytableheaders.js"></script>
       <link href="static/css/jquery.comiseo.daterangepicker.css" rel="stylesheet">
       <script type="text/javascript" src="static/js/jquery.comiseo.daterangepicker.js"></script>
 
@@ -346,7 +351,9 @@
                     },
                     datepickerOptions : {
                         numberOfMonths : 2
-                    }
+                    },
+
+                    icon:""
 
                   });
                   return $div;
@@ -535,13 +542,16 @@
                       width: 50,
                       sorting:false
                  },
+                 {type: "control" },
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
                  {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)},
                  {title: "Manager",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },
-                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on) },
+                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on), validate: {validator:"required", message: influencerFieldsDict.date_of_promotion_on+" is required" } },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
-                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username)},
+                 {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username), itemTemplate:function(value, item){
+                    return $("<a>").attr("href", "https://www.instagram.com/"+value).attr("target", "_blank").style("text-decoration","underline").text(value);
+                 }},
                  {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number", visible: isColumnVisible(influencerFieldsDict.followers_count)},
 
                  {name: "email", title: influencerFieldsDict.email, type: "text", visible: isColumnVisible(influencerFieldsDict.email) },
@@ -578,10 +588,9 @@
                 }, visible: isColumnVisible(influencerFieldsDict.centra_update_at) },
 
                  {name: "is_answered", title: influencerFieldsDict.is_answered, type: "select", items: is_answered_choices, valueField: "Name", textField: "Name",  visible: isColumnVisible(influencerFieldsDict.is_answered)  },
-                 {name: "last_contacted_on", title: influencerFieldsDict.last_contacted_on ,type: "myDateField",  align: "center",  inserting: true, editing: true,autosearch: true,filtering:true , visible: isColumnVisible(influencerFieldsDict.last_contacted_on)},
                  {name: "", title: influencerFieldsDict.is_duplicate, type: "checkbox", visible: true, inserting: true, editing: true, visible: isColumnVisible(influencerFieldsDict.is_duplicate) },
-                 {name: "is_old_record", type: "checkbox", title:influencerFieldsDict.is_old_record, visible: true, inserting: true, editing: true,  visible: isColumnVisible(influencerFieldsDict.is_old_record)},
-                 {type: "control" }
+                 {name: "is_old_record", type: "checkbox", title:influencerFieldsDict.is_old_record, visible: true, inserting: true, editing: true,  visible: isColumnVisible(influencerFieldsDict.is_old_record)}
+
              ]
 
              });

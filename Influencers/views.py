@@ -488,7 +488,6 @@ def dump(obj):
     for attr in dir(obj):
         print("obj.%s = %r" % (attr, getattr(obj, attr)))
 
-
 def leadToDict(x):
     item = model_to_dict(x, fields=[field.name for field in x._meta.fields])
     item['created_at'] = x.created_at
@@ -533,7 +532,6 @@ class InfluencersQuery(View):
                           'created_by__id',
                           InfluencerModel.email.field_name,
                           InfluencerModel.is_answered.field_name,
-                          InfluencerModel.last_contacted_on.field_name,
                           InfluencerModel.is_duplicate.field_name,
                           InfluencerModel.order_num.field_name,
                           InfluencerModel.order_code.field_name,
