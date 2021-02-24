@@ -2,6 +2,7 @@ import codecs
 import csv
 import io
 from collections import Set
+from functools import reduce
 
 import email_validator
 import itertools
@@ -104,8 +105,8 @@ class BaseView(View):
         #check if prospect already record exists with email
         messages = []
         object = form.save(commit=False)
-        if object.email and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(email=object.email) & Q(is_influencer=object.is_influencer)).exists():
-                messages.append(object.is_influencer + " with email: " + object.email + " " + "already exists")
+        if object.channel_username and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(channel_username=object.channel_username) & Q(is_influencer=object.is_influencer)).exists():
+                messages.append(object.is_influencer + " with username: " + object.channel_username + " " + "already exists")
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
@@ -132,9 +133,6 @@ class BaseView(View):
         itemFromDB = self.model.objects.get(pk=id)
         if itemFromDB.created_by_id != request.user.pk and not request.user.is_staff:
             return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
-        if datetime.now(timezone.utc) - itemFromDB.created_at > timedelta(
-                1) and not request.user.is_staff:
-            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
 
         for field in itemFromDB._meta.fields:
             if field.name in item and "_on" in field.name and item[field.name]:
@@ -354,11 +352,11 @@ class Influencers(BaseView):
         index =0
         for row in rows:
             index += 1
-            email = row['Email']
+            channel_username = row['Instagram Username']
             is_influencer_prospect = row['Influencer/Prospect']
-            if email and is_influencer_prospect and is_influencer_prospect == is_influencer_choices[1]:
-                if InfluencerModel.objects.filter(Q(email = email) & Q(is_influencer = is_influencer_prospect)).exists():
-                     messages.append(is_influencer_prospect + " with email  " + email + " : " + "already existed at row: {0};\n".format(index))
+            if channel_username and is_influencer_prospect and is_influencer_prospect == is_influencer_choices[1]:
+                if InfluencerModel.objects.filter(Q(channel_username = channel_username) & Q(is_influencer = is_influencer_prospect)).exists():
+                     messages.append(is_influencer_prospect + " with Instagram Username  " + channel_username + " : " + "already existed at row: {0};\n".format(index))
 
         if len(messages) > 0:
             try:
@@ -470,7 +468,7 @@ class Echo:
         return value
 
 def getUserNames():
-    users = User.objects.values('username','first_name','last_name')
+    users = User.objects.order_by(User.first_name.field_name).values('username','first_name','last_name')
     users = map(lambda  x:{'username': x['username'], 'full_name': x['first_name']+" "+x['last_name']},users)
     result = [{'username': '', 'full_name': ''}]
     result.extend(users)
@@ -574,7 +572,7 @@ class InfluencersQuery(View):
             elif isinstance(v, str) and len(v) > 0:
                 if k in ['sortOrder', 'sortField']:
                     searchParams[k] = v
-                elif k in ['paid_or_unpaid'] and v:
+                elif k in ['paid_or_unpaid', 'channel', 'status', 'collection'] and v:
                     searchParams[k] = v
                 elif k == 'created_by':
                     k = "created_by__username"
@@ -584,17 +582,26 @@ class InfluencersQuery(View):
                 else:
                     searchParams[k + "__icontains"] = v
             elif k == 'created_at' and v:
-                searchParams['created_at__gte'] = datetime.fromtimestamp(v)
-                searchParams['created_at__lte'] = datetime.fromtimestamp(v) + timedelta(1)
+                range = v
+                start = range.get('start')
+                end = range.get('end')
+                searchParams['created_at__gte'] = datetime.fromtimestamp(start)
+                searchParams['created_at__lte'] = datetime.fromtimestamp(end)
             elif k in ['pageIndex', 'pageSize']:
                 searchParams[k] = v
 
             elif "_on" in k and v:
-                searchParams[k+"__gte"] = datetime.fromtimestamp(v).date()
-                searchParams[k + "__lte"] = datetime.fromtimestamp(v).date() + timedelta(1)
+                range = v
+                start = range.get('start')
+                end = range.get('end')
+                searchParams[k+"__gte"] = datetime.fromtimestamp(start).date()
+                searchParams[k + "__lte"] = datetime.fromtimestamp(end).date() + timedelta(1)
             elif k and "__username" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
-                searchParams[k+"__gte"] = datetime.fromtimestamp(v)
-                searchParams[k + "__lte"] = datetime.fromtimestamp(v) + timedelta(1)
+                range = v
+                start = range.get('start')
+                end = range.get('end')
+                searchParams[k+"__gte"] = datetime.fromtimestamp(start)
+                searchParams[k + "__lte"] = datetime.fromtimestamp(end)
 
         pageIndex = searchParams.pop("pageIndex")
         pageSize = searchParams.pop("pageSize")
@@ -626,17 +633,21 @@ class InfluencersQuery(View):
 
 class SalesReport(View):
     def get(self,request,*args,**kwargs):
-        # start_date = request.GET['start_date']
-        # end_date = request.GET['end_date']
-        start_date = datetime.today()-timedelta(100)
-        end_date = datetime.today()
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        # start_date = datetime.today()-timedelta(100)
+        # end_date = datetime.today()
         # if not start_date and not end_date:
         #     return HttpResponse("Invalid input",status=404)
         # else:
         #     start_date = datetime.fromtimestamp(start_date,tz=timezone.utc)
         #     end_date = datetime.fromtimestamp(end_date,tz=timezone.utc)
 
-
+        if not start_date or not end_date:
+             return render(request, 'report.html',None)
+        start_date = datetime.fromtimestamp(int(start_date), tz=timezone.utc)
+        end_date = datetime.fromtimestamp(int(end_date), tz= timezone.utc)
         #influe_vouchers = InfluencerModel.objects.values(InfluencerModel.discount_coupon.field_name).distinct()
         country_sales_vouchers_dict= dict() # to use just for quick look up of grandtotal of countries
         rows = []
@@ -646,7 +657,6 @@ class SalesReport(View):
             cursor.execute(query)
             while True:
                 row = cursor.fetchone()
-
                 country_sales_vouchers_dict[row[0]] = row[1]
         except Exception as e:
             logger.exception(e.__str__())
@@ -655,7 +665,6 @@ class SalesReport(View):
 
         cursor = connection.cursor()
         try:
-
             costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_on >= \'{0}\' and date_of_promotion_on <= \'{1}\' group by i1.country".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
             cursor.execute(costs_query)
             while True:
@@ -667,6 +676,7 @@ class SalesReport(View):
                     salesInfo.voucher_sales = voucher_sales
                     salesInfo.product_cost = row[1]
                     salesInfo.commission = row[2]
+                    salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
                     # replace the dict value with new sales ifno obj
                     country_sales_vouchers_dict[country_name ] = salesInfo
                     logger.debug("updated commission and product cost")
@@ -674,6 +684,7 @@ class SalesReport(View):
                     salesInfo.voucher_sales = 0
                     salesInfo.product_cost = row[1]
                     salesInfo.commission = row[2]
+                    salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
                     country_sales_vouchers_dict[country_name] = salesInfo
                     logger.debug("updated commission and product cost with 0 sales")
 
@@ -684,16 +695,17 @@ class SalesReport(View):
 
         orders = OrderInfo.objects.filter(Q(orderDate__gte=start_date) & Q(orderDate__lte=end_date))
         country_field_name = InfluencerModel.country.field_name
-        # entire sales country wise , in the specified time period
+        # entire sales country wise , in the specified time period.
+        # this is obtained from orderinfo, i.e from centra sync details
         country_sales = orders.values(country_field_name).annotate(sales=Sum('grandTotal'))
 
         for _ in country_sales:
             _country_name = _[country_field_name]
             _sales = _['sales']
-            if _country_name in country_sales_vouchers_dict and type(country_sales_vouchers_dict[_country_name] == SalesInfo.__class__):
+            if type(country_sales_vouchers_dict.get(_country_name)).__name__ == 'SalesInfo':
                 salesInfo = country_sales_vouchers_dict[_country_name]
                 salesInfo.country = _country_name
-                salesInfo.centra_sales = _['sales']
+                salesInfo.country_sales = _sales
                 rows.append(salesInfo)
             elif _country_name in country_sales_vouchers_dict :
                 salesInfo = SalesInfo()
@@ -704,11 +716,23 @@ class SalesReport(View):
             else:
                 salesInfo = SalesInfo()
                 salesInfo.country =_country_name
-                salesInfo.centra_sales = _['sales']
+                salesInfo.country_sales = _['sales']
                 rows.append(salesInfo)
 
+        #evalulate total voucher_sales sum
+        total_voucher_sales =0
+        total_voucher_sales = reduce(lambda x,y:x+y.country_sales,rows, total_voucher_sales)
+
+        for salesInfo in rows:
+            if salesInfo.country_sales > 0:
+                salesInfo.influe_to_country_sales_ratio = (salesInfo.voucher_sales/salesInfo.country_sales)*100
+                salesInfo.influe_to_country_sales_ratio = round(salesInfo.influe_to_country_sales_ratio,2)
+            salesInfo.roas = salesInfo.voucher_sales-salesInfo.total_cost
+            if total_voucher_sales > 0:
+                percent_total_sales = (salesInfo.voucher_sales/total_voucher_sales)*100
+                salesInfo.percent_total_sales = round(percent_total_sales, 2)# remove last 2 decimals
         responseObj = dict()
-        responseObj['salesInfos'] = rows
+        responseObj['salesInfos'] = list(map(lambda x:x.__dict__, rows))
         return JsonResponse(responseObj, status=200, safe=False)
 
 

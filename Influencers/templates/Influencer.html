@@ -91,7 +91,7 @@
                      <div class="menu">
                         <ul class="clearfix">
                            <li class="active"><a href="#all_influencers">Influencers</a></li>
-                           <li><a href="reports" target="_blank">Reports</a></li>
+                            <li><a href="reports" target="_blank">Reports</a></li>
                            <li><a href="#importFunction">Upload</a></li>
                            <li><a href="admin" target="_blank">Admin</a></li>
                            <li><a href="change-password">Change Pwd</a></li>
@@ -177,7 +177,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment-with-locales.js"></script>
 
       <script src="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/src/js/bootstrap-datetimepicker.js"></script>
-    <link rel="stylesheet" type="text/css"
+      <link rel="stylesheet" type="text/css"
           href="https://cdn.rawgit.com/Eonasdan/bootstrap-datetimepicker/a549aa8780dbda16f6cff545aeabc3d71073911e/build/css/bootstrap-datetimepicker.css">
       <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
       <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
@@ -185,16 +185,13 @@
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
       <script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Header/js/jquery.stickytableheaders.js"></script>
-      <!-- google map js -->
+      <link href="static/css/jquery.comiseo.daterangepicker.css" rel="stylesheet">
+      <script type="text/javascript" src="static/js/jquery.comiseo.daterangepicker.js"></script>
 
-      <script src="static/js/db.js"></script>
-
-
-
-      <!-- end google map js -->
      <script>
 
             $(function() {
+                !is_user_staff && $("li a[href='admin']").hide();
                 //console.log(influencerFieldsList);
                 $("table").each(function(){$(this).stickyTableHeaders();});
                 $("button[name='configureColumns']").on('click', function(e){
@@ -335,16 +332,41 @@
                             $grid.search();
     }                }).prop("readonly", !!this.readOnly);
                 },
-                filterTemplate: function() {
-                    if(!this.filtering)
+                _searchDate: function($grid){
+                  if(!this.filtering)
                     return "";
-                    var grid = this._grid,
-                    $result = this.filterControl = this._createDate(this._grid);
-                    return $result;
+                  $input = $("<input>");
+                  $div =  $("<div>").append($input);
+                  $input.daterangepicker({
+                    change:function(dateText) {
+                            $grid.search();
+                    },
+                    clear:function(dateText) {
+                            $grid.search();
+                    },
+                    datepickerOptions : {
+                        numberOfMonths : 2
+                    }
+
+                  });
+                  return $div;
+
+                },
+                filterTemplate: function() {
+                  if(!this.filtering)
+                    return "";
+                  var grid = this._grid,
+                  $result = this.filterControl = this._searchDate(this._grid);
+                  return $result;
+
                 },
             filterValue: function() {
-                var date=this.filterControl.datepicker("getDate");
-                if(date) return (date.getTime())/1000;
+                var range=this.filterControl.children().first().daterangepicker("getRange");
+                if(range) {
+                  range.start = (range.start.getTime())/1000;
+                  range.end = (range.end.getTime())/1000;
+                  return range;
+                }
                 return null;
             },
 
@@ -364,7 +386,7 @@
                 },
                 insertValue: function() {
                     var date=this._insertPicker.datepicker("getDate");
-                    if(date) return date.toLocaleDateString();
+                    if(date) return date;
                     return null;
                 },
                 editValue: function() {
@@ -481,6 +503,13 @@
                                              record.index = index+1;
                                          });
                                       d.resolve(response);
+                                 }).fail(function(response){
+                                    if(response.responseJSON){
+                                       alert(response.responseJSON.error+" "+response.statusText);
+                                    }else{
+                                    alert(response.statusText);
+                                    }
+
                                  });
                                  return d.promise();
                              }

@@ -56,7 +56,6 @@ class InfluencerForm(ModelForm):
 
 
 
-
 # class B2BLeadForm(ModelForm):
 #     class Meta:
 #         model = B2BLead
