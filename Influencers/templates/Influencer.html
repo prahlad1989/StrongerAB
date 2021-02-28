@@ -393,7 +393,7 @@
                 },
                 insertValue: function() {
                     var date=this._insertPicker.datepicker("getDate");
-                    if(date) return date;
+                    if(date) return date.toISOString().split("T")[0];
                     return null;
                 },
                 editValue: function() {
@@ -545,12 +545,12 @@
                  {type: "control" },
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
                  {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)},
-                 {title: "Manager",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
+                 {title: "Created By",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },
                  {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on), validate: {validator:"required", message: influencerFieldsDict.date_of_promotion_on+" is required" } },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
                  {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username), itemTemplate:function(value, item){
-                    return $("<a>").attr("href", "https://www.instagram.com/"+value).attr("target", "_blank").style("text-decoration","underline").text(value);
+                    return $("<a>").attr("href", "https://www.instagram.com/"+value).attr("target", "_blank").text(value);
                  }},
                  {name: "followers_count", title: influencerFieldsDict.followers_count, type: "number", visible: isColumnVisible(influencerFieldsDict.followers_count)},
 

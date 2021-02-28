@@ -39,6 +39,7 @@ class Influencer(InfluencerBase):
     is_influencer_choices = map(lambda x: (x, x), is_influencer_choices)
     is_answered_choices = map(lambda x: (x, x), is_answered_choices)
     is_influencer = models.CharField(max_length=12, verbose_name='Influencer/Prospect', choices=is_influencer_choices, null=False, blank=False)
+    managed_by = models.ForeignKey(User, on_delete=models.SET_NULL, default=None, blank=True, null=True, related_name = 'managed_by_user', verbose_name='Manager')
     email = models.EmailField(null=True, verbose_name='Email', blank=True)
     is_answered = models.CharField( verbose_name='Answered', choices=is_answered_choices, max_length=5, null=True, blank=True)
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
