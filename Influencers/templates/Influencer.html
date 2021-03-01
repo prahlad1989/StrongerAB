@@ -577,9 +577,9 @@
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();
                 } ,visible: isColumnVisible(influencerFieldsDict.created_at)  },
 
-                 {name: "updated_by__username", title: "Last Updated By", type:"text", visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
+                 {name: "updated_by__username", title: "Last Updated By", type:"select", selectedIndex: -1,items: users, visible:true,inserting: false, editing: false, textField: "updated_by__username", valueField: "updated_by", itemTemplate:function(value,item){
                   return item.updated_by__first_name +" "+ item.updated_by__last_name;
-                 },visible: isColumnVisible(influencerFieldsDict.updated_by__username)  },
+                 },visible: isColumnVisible(influencerFieldsDict.updated_by)  },
                  {name: "updated_at", title: influencerFieldsDict.updated_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true, itemTemplate: function(value) {
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();

@@ -563,7 +563,6 @@ class InfluencersQuery(View):
                           InfluencerModel.is_old_record.field_name,
                           InfluencerModel.created_at.field_name,
                           InfluencerModel.updated_at.field_name,
-
                           InfluencerModel.centra_update_at.field_name,
                           "updated_by__id", "updated_by__username", "updated_by__first_name",  "updated_by__last_name",
                           "managed_by_id", "managed_by__username", "managed_by__first_name",  "managed_by__last_name")
