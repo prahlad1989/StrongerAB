@@ -13,7 +13,7 @@ from jsonpath_ng import parse
 from python_graphql_client import GraphqlClient
 
 from Influencers.models import Influencer as Influencer, Constants, OrderInfo
-from StrongerAB1.settings import centra_api_start_date
+from StrongerAB1.settings import centra_api_start_date, centra_api_revenue_click_start
 from StrongerAB1.settings import centra_key, centra_api_url
 
 logger = getLogger(__name__)
@@ -192,6 +192,21 @@ class CentraToDB(OrdersUpdate2):
             c.value=now.strftime(self.timeFormat)
             c.save()
         logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
+
+
+        logger.info("now started updating influencers revenue click")
+        cursor = connection.cursor()
+
+        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > {0}} and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > {1} and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start)
+
+        try:
+            cursor.execute(query)
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
+        logger.info("update revenue click complete")
+
 
 
 class CentraToDBAllOrders(CentraToDB):

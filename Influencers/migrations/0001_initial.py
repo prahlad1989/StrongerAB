@@ -131,7 +131,7 @@ class Migration(migrations.Migration):
                 ('followers_count', models.IntegerField(null=True, verbose_name='Followers')),
                 ('channel', models.CharField(max_length=2000, verbose_name='Channel')),
                 ('country', models.CharField(max_length=100, verbose_name='Country')),
-                ('collection', models.CharField(max_length=100, null=True, verbose_name='Collection')),
+                ('collection', models.CharField(max_length=100, null=True, verbose_name='Campaign')),
                 ('discount_coupon', models.CharField(max_length=100, null=True, verbose_name='Discount code')),
                 ('valid_from', models.DateTimeField(verbose_name='Valid From')),
                 ('valid_till', models.DateTimeField(verbose_name='Valid Till')),

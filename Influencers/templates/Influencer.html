@@ -388,7 +388,7 @@
                 editTemplate: function(value) {
                     if(!this.editing)
                         return this.itemTemplate.apply(this, arguments);
-                     if(!value)return this._insertPicker = $("<input>").datepicker({ defaultDate: new Date() });
+                     if(!value)return this._editPicker = $("<input>").datepicker({ defaultDate: new Date() });
                      return this._editPicker = $("<input>").datepicker().datepicker("setDate", new Date(value));
                 },
                 insertValue: function() {
@@ -405,7 +405,7 @@
 
             jsGrid.fields.myDateField = MyDateField;
 
-           /* function insert_on_enter(field) {
+            function insert_on_enter(field) {
               field.on("keydown", function(e) {
                 if(e.keyCode === 13) {
                   $("#jsGridInfluencers").jsGrid("insertItem");
@@ -421,7 +421,7 @@
                   return false;
                 }
               });
-            } */
+            }
 
             var resultedFields = influe_field_preferences.length > 0 ? influencer_mandatory_fields.length+influe_field_preferences.length : influencerFieldsList.length;
 
@@ -544,9 +544,10 @@
                  },
                  {type: "control" },
                  {title: "Id", name: "id", type: "number", visible: false, inserting: false, editing: false },
-                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)},
-                 {title: "Created By",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
-                     return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },
+                 {name: "is_influencer", title: influencerFieldsDict.is_influencer, type:"select", selectedIndex: -1,items: influencerOrProspectItems, valueField: "Value", textField: "Name", validate: {validator:"required", message: influencerFieldsDict.is_influencer+" is required" },  visible: isColumnVisible(influencerFieldsDict.is_influencer)
+                 },
+                 {title: influencerFieldsDict.managed_by_id, name: "managed_by_id", type: "select", selectedIndex: -1, items: users, valueField: "id", textField: "full_name", filtering: true, inserting: true, editing: true, itemTemplate: function(value,item){
+                     return item.managed_by__first_name +" "+ item.managed_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.managed_by_id), validate: {validator:"required", message: influencerFieldsDict.managed_by_id+" is required" }  },
                  {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on), validate: {validator:"required", message: influencerFieldsDict.date_of_promotion_on+" is required" } },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
                  {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username), itemTemplate:function(value, item){
@@ -569,6 +570,8 @@
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false,  visible: isColumnVisible(influencerFieldsDict.product_cost) },
                  {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; },visible: isColumnVisible(influencerFieldsDict.revenue_click)  },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true, visible: isColumnVisible(influencerFieldsDict.comments) },
+                 {title: "Created By",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
+                     return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },
                  {name: "created_at", title: influencerFieldsDict.created_at, type: "myDateField",  align: "center",  inserting: false, editing: false,autosearch: true,filtering:true,itemTemplate: function(value) {
                     var x = new Date(value);
                     return x.toLocaleDateString("fr-CA")+" "+x.getHours()+":"+x.getMinutes()+":"+x.getSeconds();

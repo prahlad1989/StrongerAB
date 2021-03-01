@@ -46,13 +46,14 @@ class LoginForm(forms.Form):
 class InfluencerForm(ModelForm):
     class Meta:
         model = Influencer
-        exclude = ['created_at','updated_at','created_by','updated_by','ID','is_duplicate', Influencer.currency.field_name, Influencer.revenue_analysis.field_name, Influencer.valid_till.field_name, Influencer.valid_from.field_name]
+        exclude = ['managed_by', 'created_at','updated_at','created_by','updated_by','ID','is_duplicate', Influencer.currency.field_name, Influencer.revenue_analysis.field_name, Influencer.valid_till.field_name, Influencer.valid_from.field_name]
     def __init__(self, *args, **kwargs):
         super(InfluencerForm, self).__init__(*args, **kwargs)
 
         for field in Influencer._meta.get_fields():
             if field.verbose_name not in influencer_mandatory_fields and field.name in self.fields:
                 self.fields[field.name].required = False
+
 
 
 

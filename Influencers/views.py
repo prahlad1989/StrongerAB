@@ -100,7 +100,7 @@ class BaseView(View):
     @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         form = self._getForm(request)
-        #logger.info("form is {0}".format(form))
+        #logger.info("form is {0}".format(form))f
         logger.error("form errors {0}".format(form.errors))
         #check if prospect already record exists with email
         messages = []
@@ -120,6 +120,7 @@ class BaseView(View):
         object.created_by = request.user
         object.updated_by = request.user
         object.updated_at = datetime.now()
+        object.managed_by_id = int(request.POST['managed_by_id'])
         object.save()
         logger.info(
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
@@ -150,10 +151,11 @@ class BaseView(View):
                         itemFromDB.__setattr__(field.name, date)
 
 
-            elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr','revenue_click']:
+            elif field.name in item and not field.name in ['created_by','updated_by','influencerbase_ptr','revenue_click','managed_by']:
                 #print(field.name)
                 itemFromDB.__setattr__(field.name, item[field.name])
         itemFromDB.updated_by = request.user
+        itemFromDB.managed_by_id = item['managed_by_id']
         itemFromDB.updated_at = datetime.now()
         itemFromDB.save()
         logger.info(
@@ -239,14 +241,9 @@ class CentraToDB(CentraBase):
         centraToDBFun(message="Centra to DB", repeat =60*60)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
-class OrderUpdatesView(CentraToDB):
-    def get(self,request, *args, **kwargs):
-        logger.info("updated orders with discount coupon related info")
-        self.deleteTasks("Influencers.tasks.centraOrdersUpdate")
-        centraOrdersUpdate(message="Centra orders update", repeat =60*60)
-        return JsonResponse({"will be updated in an hour":True},status=200)
 
-class ValidationUpdatesView(OrderUpdatesView):
+
+class ValidationUpdatesView(CentraToDB):
     def get(self,request, *args,**kwargs):
         logger.info("updating influencers with discount coupon related info{0}".format(datetime.now()))
         self.deleteTasks("Influencers.tasks.valiationsUpdate")
@@ -318,7 +315,11 @@ class Influencers(BaseView):
                         value = datetime.fromisoformat(value).date()
                     except Exception as e:
                         messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
-
+                elif key in ['Manager']:
+                    try:
+                        isUserExists = User.objects.get(username=value)
+                    except Exception as e:
+                        messages.append(key + "  " + value + " : " + e.__str__() + " at row: {0};\n".format(index))
                 for x in [InfluencerModel.followers_count, InfluencerModel.commission, InfluencerModel.product_cost, InfluencerModel.revenue_analysis, InfluencerModel.revenue_click]:
                     field = InfluencerModel._meta.get_field(x.field_name)
                     if key == field.verbose_name and value:
@@ -334,7 +335,7 @@ class Influencers(BaseView):
                         messages.append(
                             "for " + key + "  " + value + " : " + "should not be more than {0} chars at row: {1};\n".format(
                                 field.max_length, index))
-                # elif key in [InfluencerModel.comments.verbose_name]:
+
                 #
                 #     if len(value) > 500:
                 #         messages.append(
@@ -352,7 +353,7 @@ class Influencers(BaseView):
         index =0
         for row in rows:
             index += 1
-            channel_username = row['Instagram Username']
+            channel_username = row.get('Instagram Username')
             is_influencer_prospect = row['Influencer/Prospect']
             if channel_username and is_influencer_prospect and is_influencer_prospect == is_influencer_choices[1]:
                 if InfluencerModel.objects.filter(Q(channel_username = channel_username) & Q(is_influencer = is_influencer_prospect)).exists():
@@ -396,6 +397,7 @@ class Influencers(BaseView):
                             model.__setattr__(field.attname, value)
 
                     model.created_by = request.user
+                    model.managed_by = request.user
                     model.updated_by = request.user
                     model.updated_at = datetime.now()
                     model.save()
@@ -443,6 +445,7 @@ def allInfluencers(request):
     context["is_user_staff"] = user.is_staff
     context["username"] = user.get_username()
     context["first_name"] = user.first_name
+    context["user_id"] = user.id
     influencerFields = InfluencerModel._meta.get_fields()
     influencerFieldsList = list()
     influencerFieldsDict = dict()
@@ -468,9 +471,9 @@ class Echo:
         return value
 
 def getUserNames():
-    users = User.objects.order_by(User.first_name.field_name).values('username','first_name','last_name')
-    users = map(lambda  x:{'username': x['username'], 'full_name': x['first_name']+" "+x['last_name']},users)
-    result = [{'username': '', 'full_name': ''}]
+    users = User.objects.order_by(User.first_name.field_name).values('username','first_name','last_name','id')
+    users = map(lambda  x:{'username': x['username'], 'full_name': x['first_name']+" "+x['last_name'], 'id':x['id']},users)
+    result = [{'username': '', 'full_name': '','id':''}]
     result.extend(users)
     return result
     #return JsonResponse({"users": list(usernames)}, safe=False, status=200)
@@ -498,6 +501,10 @@ def leadToDict(x):
     item['created_by__last_name'] = x.created_by.last_name
     item['updated_by__first_name'] = x.updated_by.first_name
     item['updated_by__last_name'] = x.updated_by.last_name
+    item['managed_by__first_name'] = x.managed_by.first_name
+    item['managed_by__last_name'] = x.managed_by.last_name
+    item['managed_by_id'] = x.managed_by.id
+
     return item
 
 
@@ -556,8 +563,10 @@ class InfluencersQuery(View):
                           InfluencerModel.is_old_record.field_name,
                           InfluencerModel.created_at.field_name,
                           InfluencerModel.updated_at.field_name,
+
                           InfluencerModel.centra_update_at.field_name,
-                          "updated_by__username", "updated_by__first_name",  "updated_by__last_name")
+                          "updated_by__id", "updated_by__username", "updated_by__first_name",  "updated_by__last_name",
+                          "managed_by_id", "managed_by__username", "managed_by__first_name",  "managed_by__last_name")
 
 
     def getQueryParams(self, request):
@@ -570,23 +579,24 @@ class InfluencersQuery(View):
             elif isinstance(v, str) and len(v) > 0:
                 if k in ['sortOrder', 'sortField']:
                     searchParams[k] = v
-                elif k in ['paid_or_unpaid', 'channel', 'status', 'collection'] and v:
+                elif k in ['paid_or_unpaid', 'channel', 'status', 'collection','managed_by_id'] and v:
                     searchParams[k] = v
-                elif k == 'created_by':
-                    k = "created_by__username"
-                elif k == 'updated_by':
-                    k = "updated_by__username"
-                    # searchParams["created_by__username__icontains"] = v
+                elif k in ['created_by','updated_by']:
+                    searchParams[k+"__username" + "__icontains"] = v
+
+
                 else:
-                    searchParams[k + "__icontains"] = v
-            elif k == 'created_at' and v:
+                    searchParams[k  + "__icontains"] = v
+            elif "_at" in k and v:
                 range = v
                 start = range.get('start')
                 end = range.get('end')
-                searchParams['created_at__gte'] = datetime.fromtimestamp(start)
-                searchParams['created_at__lte'] = datetime.fromtimestamp(end)
-            elif k in ['pageIndex', 'pageSize']:
+                searchParams[k+'__gte'] = datetime.fromtimestamp(start)
+                searchParams[k+'__lte'] = datetime.fromtimestamp(end)+timedelta(1)
+            elif k in ['pageIndex', 'pageSize'] and v:
                 searchParams[k] = v
+            elif k in ['managed_by'] and v:
+                searchParams[k+"__id"] = v
 
             elif "_on" in k and v:
                 range = v
@@ -594,12 +604,13 @@ class InfluencersQuery(View):
                 end = range.get('end')
                 searchParams[k+"__gte"] = datetime.fromtimestamp(start).date()
                 searchParams[k + "__lte"] = datetime.fromtimestamp(end).date() + timedelta(1)
-            elif k and "__username" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
+            elif k and "__username" not in k and "managed_by_id" not in k and self.model._meta.get_field(k).get_internal_type() == "DateTimeField" and v:
                 range = v
                 start = range.get('start')
                 end = range.get('end')
                 searchParams[k+"__gte"] = datetime.fromtimestamp(start)
                 searchParams[k + "__lte"] = datetime.fromtimestamp(end)
+
 
         pageIndex = searchParams.pop("pageIndex")
         pageSize = searchParams.pop("pageSize")
