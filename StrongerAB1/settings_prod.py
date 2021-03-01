@@ -190,9 +190,10 @@ adminMsg=" if you are not admin"
 
 influencer_post_status = ['','Published', 'Reminder1', 'Reminder2', 'Abandoned']
 #influencer_mandatory_fields =['Instagram Username','Country','Influencer/Prospect','ID']
-influencer_mandatory_fields =['Country','Influencer/Prospect','Date']
+influencer_mandatory_fields =['Country','Influencer/Prospect','Date','Manager']
 is_influencer_choices = ["", "Prospect", "Influencer",'PR_','Affiliate']
 is_answered_choices = ["","Yes", "No"]
 centra_key = "2de0107b9b16e994f1894e514f031a21"
 centra_api_url = "https://stronger.centra.com/graphql"
 centra_api_start_date = "2020-10-01"
+centra_api_revenue_click_start = "2021-02-01"
