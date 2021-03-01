@@ -197,7 +197,7 @@ class CentraToDB(OrdersUpdate2):
         logger.info("now started updating influencers revenue click")
         cursor = connection.cursor()
 
-        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > {0}} and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > {1} and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start)
+        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > \'{0}\' and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_on > \'{1}\' and inf.date_of_promotion_on >= inf.valid_from and date_of_promotion_on <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start)
 
         try:
             cursor.execute(query)
@@ -245,7 +245,7 @@ class CentraToDBAllOrders(CentraToDB):
                         if not values[0]:
                             logger.debug("has no discounts")
                             continue
-                    orderInfo.discount_coupons = values[0]
+                        orderInfo.discount_coupons = values[0]
 
                     orderInfoList.append(orderInfo)
                 if orders:
