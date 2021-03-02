@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 
 
 sql_datetime_format = "%Y-%m-%d %H:%M:%S"
+javascript_iso_format = ""
 sql_date_format = "%Y-%m-%d"
 class Index(TemplateView):
     template_name = 'index.html'
@@ -121,6 +122,7 @@ class BaseView(View):
         object.updated_by = request.user
         object.updated_at = datetime.now()
         object.managed_by_id = int(request.POST['managed_by_id'])
+        object.date_of_promotion_at = datetime.fromtimestamp(int(request.POST['date_of_promotion_at']),tz=timezone.utc)
         object.save()
         logger.info(
             "Row with username {0} saved by user {1}".format(object.channel_username, request.user.get_username()))
@@ -139,7 +141,7 @@ class BaseView(View):
             if field.name in item and "_on" in field.name and item[field.name]:
                 date = item[field.name]
                 try:
-                    date = datetime.fromtimestamp(item[field.name]).date()
+                    date = datetime.fromtimestamp(item[field.name])
                     itemFromDB.__setattr__(field.name, date)
                 except Exception as e:
                     logger.exception(e)
@@ -382,7 +384,8 @@ class Influencers(BaseView):
                             value = None
                             if "_on" in field.attname:
                                 value = datetime.fromisoformat(row[field.verbose_name]).date()
-
+                            elif "_at" in field.attname:
+                                value = datetime.fromisoformat(row[field.verbose_name])
                             elif field.get_internal_type() in ['FloatField','IntegerField']:
                                 _value = row[field.verbose_name]
                                 _value = re.sub("[^\d,]", "", _value)
@@ -542,7 +545,7 @@ class InfluencersQuery(View):
                           InfluencerModel.is_duplicate.field_name,
                           InfluencerModel.order_num.field_name,
                           InfluencerModel.order_code.field_name,
-                          InfluencerModel.date_of_promotion_on.field_name,
+                          InfluencerModel.date_of_promotion_at.field_name,
                           InfluencerModel.influencer_name.field_name,
                           InfluencerModel.paid_or_unpaid.field_name,
                           InfluencerModel.channel_username.field_name,
@@ -673,7 +676,7 @@ class SalesReport(View):
 
         cursor = connection.cursor()
         try:
-            costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_on >= \'{0}\' and date_of_promotion_on <= \'{1}\' group by i1.country".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
+            costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_at >= \'{0}\' and date_of_promotion_at <= \'{1}\' group by i1.country".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
             cursor.execute(costs_query)
             while True:
                 row = cursor.fetchone()

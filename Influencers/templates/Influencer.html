@@ -214,7 +214,6 @@
                      selectedItems = $.merge([],influe_field_preferences);
                 }
 
-
                 var selectItem = function(item) {
                     selectedItems.push(item);
                 };
@@ -350,7 +349,8 @@
                             $grid.search();
                     },
                     datepickerOptions : {
-                        numberOfMonths : 2
+                        numberOfMonths : 2,
+                        maxDate: null
                     },
 
                     icon:""
@@ -393,12 +393,12 @@
                 },
                 insertValue: function() {
                     var date=this._insertPicker.datepicker("getDate");
-                    if(date) return date.toISOString().split("T")[0];
+                    if(date) return date.getTime()/1000;
                     return null;
                 },
                 editValue: function() {
                     var date=this._editPicker && this._editPicker.datepicker("getDate");
-                    if(date) return (date.getTime())/1000;
+                    if(date) return date.toISOString();
                     return null;
                 }
             });
@@ -548,7 +548,7 @@
                  },
                  {title: influencerFieldsDict.managed_by_id, name: "managed_by_id", type: "select", selectedIndex: -1, items: users, valueField: "id", textField: "full_name", filtering: true, inserting: true, editing: true, itemTemplate: function(value,item){
                      return item.managed_by__first_name +" "+ item.managed_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.managed_by_id), validate: {validator:"required", message: influencerFieldsDict.managed_by_id+" is required" }  },
-                 {name: "date_of_promotion_on", title: influencerFieldsDict.date_of_promotion_on, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_on), validate: {validator:"required", message: influencerFieldsDict.date_of_promotion_on+" is required" } },
+                 {name: "date_of_promotion_at", title: influencerFieldsDict.date_of_promotion_at, type: "myDateField",  align: "center", inserting: true, editing: true, autosearch: true,filtering:true, visible: isColumnVisible(influencerFieldsDict.date_of_promotion_at), validate: {validator:"required", message: influencerFieldsDict.date_of_promotion_at+" is required" } },
                  {name: "paid_or_unpaid", title: influencerFieldsDict.paid_or_unpaid, type:"select", items: paid_unpaid_choices ,textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.paid_or_unpaid) },
                  {name: "channel_username", title: influencerFieldsDict.channel_username, type: "text", visible: isColumnVisible(influencerFieldsDict.channel_username), itemTemplate:function(value, item){
                     return $("<a>").attr("href", "https://www.instagram.com/"+value).attr("target", "_blank").text(value);
@@ -568,7 +568,8 @@
                  {name: "collection", title: influencerFieldsDict.collection, type: "select", selectedIndex: -1, items: collections, textField:"Name", valueField: "Name", visible: isColumnVisible(influencerFieldsDict.collection) },
                  {name: "commission", title: influencerFieldsDict.commission, type: "number", filtering: false, visible: isColumnVisible(influencerFieldsDict.commission)},
                  {name: "product_cost", title: influencerFieldsDict.product_cost,  type: "number", filtering: false,  visible: isColumnVisible(influencerFieldsDict.product_cost) },
-                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; },visible: isColumnVisible(influencerFieldsDict.revenue_click)  },
+                 {name: "revenue_click", title: influencerFieldsDict.revenue_click, type: "number", editing: false,inserting: false, itemTemplate: function(value,item){ return value && Math.round(value*100)/100; },visible: isColumnVisible(influencerFieldsDict.revenue_click)},
+                 {name: "roas", title:"ROAS", type: "number", editing: false, inserting: false, value:"revenue_click",  itemTemplate:  function(value, item){ var total_cost = item.product_cost + item.commission; var roas =  item.revenue_click/total_cost; return Math.round(roas*100)/100; } },
                  {name: "comments", title: influencerFieldsDict.comments, type: "textarea",align: "right", inserting: true, editing: true, visible: isColumnVisible(influencerFieldsDict.comments) },
                  {title: "Created By",name: "created_by__username", type: "select",  selectedIndex: -1,items: users, valueField: "username", textField: "full_name",filtering: true,inserting: false, editing: false, itemTemplate: function(value,item){
                      return item.created_by__first_name +" "+ item.created_by__last_name; }, visible: isColumnVisible(influencerFieldsDict.created_by_id) },

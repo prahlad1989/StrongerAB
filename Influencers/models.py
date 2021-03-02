@@ -45,7 +45,7 @@ class Influencer(InfluencerBase):
     is_duplicate = models.BooleanField(default=False, verbose_name='Duplicate?')
     order_num = models.CharField(null=True, blank=True, verbose_name='Order Number',max_length=50)
     order_code = models.CharField(null=True, blank=True, verbose_name='Order Code', max_length=50)
-    date_of_promotion_on = models.DateField(verbose_name='Date', null=True)
+    date_of_promotion_at = models.DateTimeField(verbose_name='Date', null=True, )
     influencer_name = models.CharField(max_length=100, verbose_name='Name', null=False, blank=False)
     paid_or_unpaid = models.CharField(max_length=10, default=None, null=True, choices=paid_unpaid_choices,
                                 verbose_name='Paid/Unpaid', blank=True)
