@@ -5,7 +5,6 @@ source venv/bin/activate
 #kills and creates new tasks
 curl  https://collabs.strongerlabel.com/resetCentra
 curl  https://collabs.strongerlabel.com/updateCentraValidations
-curl  https://collabs.strongerlabel.com/updateCentraOrders
 curl  https://collabs.strongerlabel.com/centraToDB
 #start running scheduled tasks
 exec python manage.py process_tasks
