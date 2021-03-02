@@ -106,8 +106,8 @@ class BaseView(View):
         #check if prospect already record exists with email
         messages = []
         object = form.save(commit=False)
-        if object.channel_username and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(channel_username=object.channel_username) & Q(is_influencer=object.is_influencer)).exists():
-                messages.append(object.is_influencer + " with username: " + object.channel_username + " " + "already exists")
+        if object.channel_username and object.is_influencer and object.is_influencer == is_influencer_choices[1] and InfluencerModel.objects.filter(Q(channel_username=object.channel_username)).exists():
+                messages.append("Instagram Username with username: " + object.channel_username + " " + "already exists")
         if len(messages) > 0:
             try:
                 raise ValidationError(messages)
@@ -351,15 +351,14 @@ class Influencers(BaseView):
                 logger.error(err.messages)
                 return JsonResponse({"error": err.messages}, status=422)
 
-
         index =0
         for row in rows:
             index += 1
             channel_username = row.get('Instagram Username')
             is_influencer_prospect = row['Influencer/Prospect']
             if channel_username and is_influencer_prospect and is_influencer_prospect == is_influencer_choices[1]:
-                if InfluencerModel.objects.filter(Q(channel_username = channel_username) & Q(is_influencer = is_influencer_prospect)).exists():
-                     messages.append(is_influencer_prospect + " with Instagram Username  " + channel_username + " : " + "already existed at row: {0};\n".format(index))
+                if InfluencerModel.objects.filter(Q(channel_username = channel_username)).exists():
+                     messages.append("Instagram Username  " + channel_username + " : " + "already existed at row: {0};\n".format(index))
 
         if len(messages) > 0:
             try:
