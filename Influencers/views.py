@@ -393,13 +393,15 @@ class Influencers(BaseView):
                                 #logger.info("value is {0}".format(_value))
                                 if _value:
                                     value = _value
+                            elif field.attname in ["managed_by_id"]:
+                                value = row[field.verbose_name]
+                                value = User.objects.get(username=value).id
                             else:
                                 value = row[field.verbose_name].strip()
                             #logger.info("key {0}and value {1}".format(field.attname, row[field.verbose_name]))
                             model.__setattr__(field.attname, value)
 
                     model.created_by = request.user
-                    model.managed_by = request.user
                     model.updated_by = request.user
                     model.updated_at = datetime.now()
                     model.save()

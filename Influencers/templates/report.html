@@ -36,6 +36,8 @@
 	<link rel="icon" href="https://www.strongerlabel.com/favicon.ico?stronger" type="image/x-icon"/>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
 	<script type="text/javascript" src="static/js/autocomplete.js"></script>
+    <link href="static/css/jquery.comiseo.daterangepicker.css" rel="stylesheet">
+	<script type="text/javascript" src="static/js/jquery.comiseo.daterangepicker.js"></script>
 
 	<style>
 		canvas{
@@ -68,6 +70,7 @@
 
 				<h2>Influencer Sales </h2>
 				<a href="" class="button-m" style="float: right;">Date picker</a>
+				<div id="daterangepickerId"></div>
 				<a href="" class="button-m" style="float: right;">Date picker</a>
 				Start Date: <input type="date" name="report_start_date"/>
 				End Date: <input type="date" name="report_end_date"/>
@@ -85,9 +88,10 @@
 	    	 $report_start_date = undefined;
 	    	 $report_end_date = undefined;
 	    	 function updateSalesByCountriesView(salesInfos){
+					document.getElementById("sales_by_country_total").innerHTML='';
 					$("#sales_by_country_grid").jsGrid(
 					{
-						height: "90%",
+						height: "60%",
 						width: "100%",
 						sorting: true,
 
@@ -108,16 +112,27 @@
 						]
 					}
 					);
-				   $("#sales_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-row")
-				   .append($("<td>").text("Total"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))
-				   .append($("<td>").text("1"))));
+				  // $("#sales_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-row")
+				  // .append($("<td>").text("Total"))
+				   //.append($("<td>").text("1"))
+				  // .append($("<td>").text("1"))
+				  // .append($("<td>").text("1"))
+				 //  .append($("<td>").text("1"))
+				  // .append($("<td>").text("1"))
+				  // .append($("<td>").text("1"))
+				 ////  .append($("<td>").text("1"))
+				  // .append($("<td>").text("1"))));
+
+				   $("#sales_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tbody>").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-header-row")
+				   .append($("<td>").text("Total").addClass("jsgrid-cell jsgrid-align-right").css("width", "150px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px")))));
 
 
 	    	 }
@@ -152,14 +167,38 @@
 			 	}
 			 }
 
+			 function inputDatesChanged2(start, end){
+				handleReports(start, end);
+			 }
+
 			 $("input[name='report_start_date'], input[name='report_end_date']").on('change',function(){
 				inputDatesChanged();
 			 });
+			 $input = $("#daterangepickerId");
+			 $input.daterangepicker({
+                    change:function(e) {
+                           var dateRange = $(this).daterangepicker("getRange");
+                           inputDatesChanged2(dateRange.start, dateRange.end);
+
+                    },
+                    clear:function(dateText) {
+                            $grid.search();
+                    },
+                    datepickerOptions : {
+                        numberOfMonths : 2,
+                        maxDate: null
+                    },
+
+                    icon:""
+
+                  });
 	    });
 
 	</script>
+	<div id = "sales_by_country_div">
 	<div id="sales_by_country_grid"></div>
 	<div id="sales_by_country_total"></div>
+    </div>
 </div>
 
 <table class="report-table">
