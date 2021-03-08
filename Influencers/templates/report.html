@@ -13,7 +13,7 @@
       <script src="static/js/wow.js"></script>
 
 
-      <script src="../js/jquery.stickytableheaders.js" type="text/javascript"></script>
+
 	<script src="static/js/custom.js"></script>
        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
       <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.2/themes/cupertino/jquery-ui.css">
@@ -27,17 +27,15 @@
 
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js"></script>
-      <script src="https://www.jqueryscript.net/demo/jQuery-Plugin-For-Sticky-Table-Header/js/jquery.stickytableheaders.js"></script>
-      <!-- google map js -->
-
-
 	<link rel="stylesheet" href="static/css/style3.css" type="text/css" media="all" />
 	<link rel="stylesheet" href="static/css/autocomplete.css" type="text/css" media="all" />
 	<link rel="icon" href="https://www.strongerlabel.com/favicon.ico?stronger" type="image/x-icon"/>
 	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-	<script type="text/javascript" src="static/js/autocomplete.js"></script>
+<!--	<script type="text/javascript" src="static/js/autocomplete.js"></script>-->
     <link href="static/css/jquery.comiseo.daterangepicker.css" rel="stylesheet">
 	<script type="text/javascript" src="static/js/jquery.comiseo.daterangepicker.js"></script>
+	<link rel="stylesheet" href="https://forni.se/wp-content/themes/sw_new_forni_theme/css/crm.css" />
+	<script type="text/javascript" src="static/js/utils.js" ></script>
 
 	<style>
 		canvas{
@@ -69,11 +67,12 @@
 			<div class="channel-data">
 
 				<h2>Influencer Sales </h2>
-				<a href="" class="button-m" style="float: right;">Date picker</a>
 				<div id="daterangepickerId"></div>
-				<a href="" class="button-m" style="float: right;">Date picker</a>
-				Start Date: <input type="date" name="report_start_date"/>
-				End Date: <input type="date" name="report_end_date"/>
+<!--				<a href="" class="button-m" style="float: right;">Date picker</a>-->
+<!--				-->
+<!--				<a href="" class="button-m" style="float: right;">Date picker</a>-->
+<!--				Start Date: <input type="date" name="report_start_date"/>-->
+<!--				End Date: <input type="date" name="report_end_date"/>-->
 			</div>
 		</div>
 	</section>
@@ -105,35 +104,44 @@
 							{ name: "commission", title:"Commission",  type: "number", width: 100 },
 							{ name: "product_cost", title:"Product Cost", type: "number", width:100},
 							{ name:"total_cost", type: "number",title: "Total Cost", width:100},
-							{ name:"roas", type: "number", title:"ROAS", width:100 },
+							{ name:"roas", type: "number", title:"ROAS", width:100, itemTemplate:round2Decimals(2) },
 							{ name: "percent_total_sales", title:"% of Total Sales", type: "number" },
 							{ name: "country_sales", title: "Country Total Sales", type: "number", width: 100},
 							{ name: "influe_to_country_sales_ratio", title: "Influencer Sales/Country Sales", type: "number", width: 100}
 						]
 					}
 					);
-				  // $("#sales_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-row")
-				  // .append($("<td>").text("Total"))
-				   //.append($("<td>").text("1"))
-				  // .append($("<td>").text("1"))
-				  // .append($("<td>").text("1"))
-				 //  .append($("<td>").text("1"))
-				  // .append($("<td>").text("1"))
-				  // .append($("<td>").text("1"))
-				 ////  .append($("<td>").text("1"))
-				  // .append($("<td>").text("1"))));
 
+				   salesInfosTotal = {
+				   	voucher_sales:0,
+				   	commission:0,
+				   	product_cost:0,
+				   	total_cost:0,
+				   	roas:0,
+				   	percent_total_sales:0,
+				   	country_sales:0,
+				   	influe_to_country_sales_ratio:0
+				   };
+				   salesInfos.forEach(function(x,i){
+				   		salesInfosTotal.voucher_sales +=x.voucher_sales;
+				   		salesInfosTotal.commission+=x.commission;
+				   		salesInfosTotal.product_cost += x.product_cost;
+				   		salesInfosTotal.total_cost += x.total_cost;
+				   		salesInfosTotal.roas += x.roas;
+						salesInfosTotal.percent_total_sales += x.percent_total_sales;
+				   		salesInfosTotal.country_sales += x.country_sales;
+				   		salesInfosTotal.influe_to_country_sales_ratio+=x.influe_to_country_sales_ratio;
+				   });
 				   $("#sales_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tbody>").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-header-row")
 				   .append($("<td>").text("Total").addClass("jsgrid-cell jsgrid-align-right").css("width", "150px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
-				   .append($("<td>").text("1").addClass("jsgrid-cell jsgrid-align-right").css("width", "100px")))));
-
+				   .append($("<td>").text(salesInfosTotal.voucher_sales).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.commission).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.product_cost).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.total_cost).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(Math.round(salesInfosTotal.roas*100)/100).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(Math.round(salesInfosTotal.percent_total_sales*100)/100).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.country_sales).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(Math.round(salesInfosTotal.influe_to_country_sales_ratio*100)/100).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px")))));
 
 	    	 }
 
@@ -192,6 +200,10 @@
                     icon:""
 
                   });
+               var firstOfMonth = new Date(new Date().setDate(1));
+               $input.daterangepicker("setRange",{start:firstOfMonth, end:new Date()})
+
+
 	    });
 
 	</script>
@@ -201,7 +213,7 @@
     </div>
 </div>
 
-<table class="report-table">
+<table  class="report-table" style="display:none;">
 	<thead>
 		<tr>
 			<th>Country</th>
