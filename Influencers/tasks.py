@@ -13,6 +13,7 @@ from jsonpath_ng import parse
 from python_graphql_client import GraphqlClient
 
 from Influencers.models import Influencer as Influencer, Constants, OrderInfo
+from Influencers.MyUtils import sql_date_format
 from StrongerAB1.settings import centra_api_start_date, centra_api_revenue_click_start
 from StrongerAB1.settings import centra_key, centra_api_url
 logger = getLogger(__name__)
@@ -264,7 +265,7 @@ class CentraToDBAllOrders(CentraToDB):
 
 
 
-@background(schedule=1*60)
+@background(schedule=10*60)
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
 
@@ -292,7 +293,8 @@ class CouponValidationUpdate(CentraUpdate):
                         } """
 
     def update(self):
-        influencersList = Influencer.objects.filter(
+
+        influencersList = Influencer.objects.filter(Q(date_of_promotion_at__gte = datetime.strptime(centra_api_revenue_click_start, sql_date_format)) &
             ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
             Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False))
         logger.info("influencersList length {0} ".format(len(influencersList)))
@@ -325,7 +327,7 @@ class CouponValidationUpdate(CentraUpdate):
         logger.info("time taken for total coupon updates {0}".format((int(time.time() - tic))))
 
 
-@background(schedule=2*60*60)
+@background(schedule=2*60)
 def valiationsUpdate(message):
     logger.info('initiated coupon validations thread')
     couponValidationUpdate  = CouponValidationUpdate()

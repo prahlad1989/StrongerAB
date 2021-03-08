@@ -86,11 +86,11 @@ class BaseView(View):
         item = json.loads(request.body)
         id = item['id']
         item = self.model.objects.get(pk=id)
-        if item.created_by_id != request.user.pk and not request.user.is_staff:
-            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
-        if datetime.now(timezone.utc) - item.created_at > timedelta(
-                1) and not request.user.is_staff:
-            return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
+        # if item.created_by_id != request.user.pk and not request.user.is_staff:
+        #     return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
+        # if datetime.now(timezone.utc) - item.created_at > timedelta(
+        #         1) and not request.user.is_staff:
+        #     return JsonResponse({'error': "You can't modify a Lead older than 1 day" + adminMsg}, status=500)
 
         influ_email = item.email
         item.delete()
@@ -134,9 +134,6 @@ class BaseView(View):
         id = item['id']
         index = item['index']
         itemFromDB = self.model.objects.get(pk=id)
-        if itemFromDB.created_by_id != request.user.pk and not request.user.is_staff:
-            return JsonResponse({'error': "You can't modify Others' Influencers" + adminMsg}, status=500)
-
         for field in itemFromDB._meta.fields:
             if field.name in item and "_on" in field.name and item[field.name]:
                 date = item[field.name]
@@ -248,7 +245,7 @@ class ValidationUpdatesView(CentraToDB):
     def get(self,request, *args,**kwargs):
         logger.info("updating influencers with discount coupon related info{0}".format(datetime.now()))
         self.deleteTasks("Influencers.tasks.valiationsUpdate")
-        valiationsUpdate(message="Centra coupon validations update", repeat =3000)
+        valiationsUpdate(message="Centra coupon validations update", repeat =5*60)
         return JsonResponse({"coupon codes be updated in an hour":True},status=200)
 
 class InfluencerView(BaseView):
@@ -668,6 +665,7 @@ class SalesReport(View):
             cursor.execute(query)
             while True:
                 row = cursor.fetchone()
+                if not row: break
                 country_sales_vouchers_dict[row[0]] = row[1]
         except Exception as e:
             logger.exception(e.__str__())
@@ -680,24 +678,27 @@ class SalesReport(View):
             cursor.execute(costs_query)
             while True:
                 row = cursor.fetchone()
-                country_name = row[0]
-                salesInfo = SalesInfo()
-                if country_name in country_sales_vouchers_dict:
-                    voucher_sales = country_sales_vouchers_dict[country_name]
-                    salesInfo.voucher_sales = voucher_sales
-                    salesInfo.product_cost = row[1]
-                    salesInfo.commission = row[2]
-                    salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
-                    # replace the dict value with new sales ifno obj
-                    country_sales_vouchers_dict[country_name ] = salesInfo
-                    logger.debug("updated commission and product cost")
+                if row:
+                    country_name = row[0]
+                    salesInfo = SalesInfo()
+                    if country_name in country_sales_vouchers_dict:
+                        voucher_sales = country_sales_vouchers_dict[country_name]
+                        salesInfo.voucher_sales = voucher_sales
+                        salesInfo.product_cost = row[1]
+                        salesInfo.commission = row[2]
+                        #salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
+                        # replace the dict value with new sales ifno obj
+                        country_sales_vouchers_dict[country_name ] = salesInfo
+                        logger.debug("updated commission and product cost")
+                    else:
+                        salesInfo.voucher_sales = 0
+                        salesInfo.product_cost = row[1]
+                        salesInfo.commission = row[2]
+                        #salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
+                        country_sales_vouchers_dict[country_name] = salesInfo
+                        logger.debug("updated commission and product cost with 0 sales")
                 else:
-                    salesInfo.voucher_sales = 0
-                    salesInfo.product_cost = row[1]
-                    salesInfo.commission = row[2]
-                    salesInfo.total_cost = salesInfo.product_cost + salesInfo.commission
-                    country_sales_vouchers_dict[country_name] = salesInfo
-                    logger.debug("updated commission and product cost with 0 sales")
+                    break
 
         except Exception as e:
             logger.exception(e.__str__())
@@ -738,12 +739,12 @@ class SalesReport(View):
             if salesInfo.country_sales > 0:
                 salesInfo.influe_to_country_sales_ratio = (salesInfo.voucher_sales/salesInfo.country_sales)*100
                 salesInfo.influe_to_country_sales_ratio = round(salesInfo.influe_to_country_sales_ratio,2)
-            salesInfo.roas = salesInfo.voucher_sales-salesInfo.total_cost
+            #salesInfo.roas = salesInfo.voucher_sales/salesInfo.total_cost
             if total_voucher_sales > 0:
                 percent_total_sales = (salesInfo.voucher_sales/total_voucher_sales)*100
                 salesInfo.percent_total_sales = round(percent_total_sales, 2)# remove last 2 decimals
         responseObj = dict()
-        responseObj['salesInfos'] = list(map(lambda x:x.__dict__, rows))
+        responseObj['salesInfos'] = list(map(lambda x:x.toProperDict(), rows))
         return JsonResponse(responseObj, status=200, safe=False)
 
 
