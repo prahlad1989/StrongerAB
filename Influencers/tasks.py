@@ -294,7 +294,7 @@ class CouponValidationUpdate(CentraUpdate):
 
     def update(self):
 
-        influencersList = Influencer.objects.filter(Q(date_of_promotion_at__gte = datetime.strptime(centra_api_revenue_click_start, sql_date_format)) &
+        influencersList = Influencer.objects.filter(Q(date_of_promotion_at__gt = datetime.strptime(centra_api_revenue_click_start, sql_date_format)) &
             ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
             Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False))
         logger.info("influencersList length {0} ".format(len(influencersList)))
