@@ -1,5 +1,5 @@
 #!/bin/bash
-DJANGODIR=/var/www/yoursite/StrongerAB
+DJANGODIR=/var/www/collabs.strongerlabel.com/StrongerAB
 cd $DJANGODIR
 source venv/bin/activate
 #kills and creates new tasks
