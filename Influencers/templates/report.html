@@ -55,6 +55,10 @@
 			flex-wrap: wrap;
 			justify-content: center;
 		}
+
+		.jsgrid-header-row .jsgrid-align-right {
+    text-align: right;
+}
 	</style>
 </head>
 
@@ -145,6 +149,58 @@
 
 	    	 }
 
+
+	    	 function updateCollabsByCountriesView(collabsInfos){
+	    	 	document.getElementById("collabs_by_country_total").innerHTML='';
+					$("#collabs_by_country_grid").jsGrid(
+					{
+						height: "60%",
+						width: "100%",
+						sorting: true,
+
+						data: collabsInfos,
+						fields: [
+							{ name: "country", title:"Country", type: "text", width: 150,itemTemplate:function(value, item){
+								var imageLoc = "static/images/flags/"+value.toLowerCase()+".png"
+								return $("<div>").text(value).append($("<img>").attr("src",imageLoc).addClass("report-thumb"));
+							} },
+							{ name: "paid", title:"Paid", type: "number", width: 100 },
+							{ name: "unpaid", title:"Unpaid",  type: "number", width: 100 },
+							{ name: "ok", title:"ÖK", type: "number", width:100},
+							{ name:"total", type: "number",title: "Total", width:100},
+
+						]
+					}
+					);
+
+				   collabsInfosTotal = {
+				   	ok:0,
+				   	paid:0,
+				   	unpaid:0,
+				   	total:0,
+
+				   };
+				   collabsInfos.forEach(function(x,i){
+				   		collabsInfosTotal.ok +=x.ok;
+				   		collabsInfosTotal.paid+=x.unpaid;
+				   		collabsInfosTotal.unpaid += x.unpaid;
+				   		collabsInfosTotal.total += x.total;
+
+				   });
+				   $("#collabs_by_country_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tbody>").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-header-row")
+				   .append($("<td>").text("Total").addClass("jsgrid-cell jsgrid-align-right").css("width", "150px"))
+				   .append($("<td>").text(collabsInfosTotal.paid).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.unpaid).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.ok).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.total).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   )));
+
+	    	 }
+
+
+
+
+
 	    	 function handleReports(start_date,end_date){
 				start_date = Date.parse(start_date)/1000;
 				end_date = Date.parse(end_date)/1000;
@@ -164,6 +220,26 @@
                           }
                      }
 				});
+
+				//collabs report
+
+				url = "collabs_report?start_date="+start_date+"&end_date="+end_date;
+				$.ajax({
+					method: 'GET',
+					url:url,
+					success:function(data){
+						collabsInfos = data.collabsInfos;
+						updateCollabsByCountriesView(collabsInfos);
+					},
+					 error: function (response){
+                          if(response.responseJSON){
+                                alert(response.responseJSON.error+" "+response.statusText);
+                           }else{
+                            alert(response.statusText);
+                          }
+                     }
+				});
+
 	    	 }
 
 
@@ -189,9 +265,6 @@
                            inputDatesChanged2(dateRange.start, dateRange.end);
 
                     },
-                    clear:function(dateText) {
-                            $grid.search();
-                    },
                     datepickerOptions : {
                         numberOfMonths : 2,
                         maxDate: null
@@ -200,7 +273,8 @@
                     icon:""
 
                   });
-               var firstOfMonth = new Date(new Date().setDate(1));
+			   var now = new Date();
+			   var firstOfMonth = new Date(now.getFullYear()+"/"+(now.getMonth()+1)+"/1");
                $input.daterangepicker("setRange",{start:firstOfMonth, end:new Date()})
 
 
@@ -337,7 +411,11 @@
 </ul>
 
 <h2>Number of Collaborations</h2>
-<table>
+	<div id = "collabs_by_country_div">
+	<div id="collabs_by_country_grid"></div>
+	<div id="collabs_by_country_total"></div>
+    </div>
+<table style="display:none;">
 	<thead>
 		<tr>
 			<th>Country</th>

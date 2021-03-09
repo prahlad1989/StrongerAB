@@ -31,7 +31,7 @@ class CentraUpdate:
 
 
 class OrdersUpdate(CentraUpdate):
-    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, PARTIAL, SHIPPED, PENDING], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 500, page: $pageNumber, sort: number_ASC  )
+    graphQlQuery = """ query($orderStartDate: String!, $orderEndDate: String!, $pageNumber: Int!) { orders(where:{status: [CONFIRMED, SHIPPED, PENDING], orderDate: {from: $orderStartDate, to: $orderEndDate} }, limit: 500, page: $pageNumber, sort: number_ASC  )
                     { orderDate
                      number 
                      createdAt
@@ -306,15 +306,19 @@ class CouponValidationUpdate(CentraUpdate):
         for eachObj in influencersList:
             try:
                 api_query_params['couponCode'] = discount_coupon = eachObj.discount_coupon
+                date_of_promotion_at = eachObj.date_of_promotion_at
                 resp = client.execute(query=graphQlQuery, variables=api_query_params)
                 coupons = resp["data"]["discounts"]
                 for coupon_from_api in coupons:
-                    if coupon_from_api['code'] ==  discount_coupon:
+                    startAt =datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
+                        timezone.utc)
+                    stopAt = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
+                        timezone.utc)
+
+                    if coupon_from_api['code'] ==  discount_coupon and date_of_promotion_at >= startAt and date_of_promotion_at <= stopAt:
                         logger.debug("coupon details are {0}".format(coupon_from_api))
-                        eachObj.valid_from = datetime.strptime(coupon_from_api['startAt'], self.timeFormat).astimezone(
-                            timezone.utc)
-                        eachObj.valid_till = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
-                            timezone.utc)
+                        eachObj.valid_from = startAt
+                        eachObj.valid_till = stopAt
                         # eachObj.centra_update_at = datetime.now(tz=timezone.utc)
                         logger.debug("copon: {0},start time: {1}, and end time: {2}".format(coupon_from_api, eachObj.valid_from,
                                                                                             eachObj.valid_till))

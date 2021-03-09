@@ -24,6 +24,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
+
+from CollabsInfo import CollabsInfo
 from Influencers.forms import LoginForm, InfluencerForm
 from Influencers.models import Influencer as InfluencerModel, Constants as Constants, OrderInfo, UserPreferences as UserPreferencesModel
 from Influencers.tasks import valiationsUpdate
@@ -225,8 +227,6 @@ class ResetCentra(CentraBase):
         logger.info("deleted all background tasks, last sync, orderinfo, discount code validations")
         return JsonResponse({"Reset centra": True}, status=200)
 
-
-
 class CentraToDB(CentraBase):
     def deleteTasks(self, name):
         existing_tasks = Task.objects.all().filter(task_name=name).delete()
@@ -281,6 +281,7 @@ class Influencers(BaseView):
             rows = json.loads(request.body)
 
         # Validation for non emopty
+        timezoneOffset = int(request.GET['timezoneOffset'])
         mandatoryFields = influencer_mandatory_fields
         index = 0
         messages = []
@@ -379,8 +380,12 @@ class Influencers(BaseView):
                             value = None
                             if "_on" in field.attname:
                                 value = datetime.fromisoformat(row[field.verbose_name]).date()
+                                value = value - timedelta(minutes=timezoneOffset)
+                                value = datetime(value,tzinfo=timezone.utc).date()
                             elif "_at" in field.attname:
                                 value = datetime.fromisoformat(row[field.verbose_name])
+                                value = value - timedelta(minutes=timezoneOffset)
+                                value = value.astimezone(tz=timezone.utc)
                             elif field.get_internal_type() in ['FloatField','IntegerField']:
                                 _value = row[field.verbose_name]
                                 _value = re.sub("[^\d,]", "", _value)
@@ -638,19 +643,49 @@ class InfluencersQuery(View):
         return JsonResponse(recordsJSON, safe=False, status=200)
 
 
+class CollabsReport(View):
+    def get(self, request, *args, **kwargs):
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        if not start_date or not end_date:
+            return render(request, 'report.html', None)
+        start_date = datetime.fromtimestamp(int(start_date), tz=timezone.utc)
+        end_date = datetime.fromtimestamp(int(end_date), tz=timezone.utc)
+
+        try:
+            collabs = InfluencerModel.objects.filter(Q(date_of_promotion_at__gte = start_date) & Q(date_of_promotion_at__lte = end_date)).values('paid_or_unpaid','country')
+            collabsList = list()
+            collabsByCountry = dict()
+            for c in collabs:
+                collabsInfo = CollabsInfo()
+                country = c['country']
+                if not country in collabsByCountry:
+                    collabsByCountry[country ] = CollabsInfo()
+                if country in collabsByCountry:
+                    collabsInfo = collabsByCountry[country]
+                    status = c['paid_or_unpaid']
+                    if status == paid_unpaid_choices[1]:
+                        collabsInfo.paid+=1
+                    elif status == paid_unpaid_choices[2]:
+                        collabsInfo.unpaid += 1
+                    elif status == paid_unpaid_choices[3]:
+                        collabsInfo.ok+=1
+                    collabsInfo.country = country
+
+            responseObj =dict()
+            responseObj['collabsInfos'] =list(map(lambda x: x.toProperDict(),collabsByCountry.values()))
+
+            return JsonResponse(responseObj, status=200, safe=False)
+
+        except Exception as e:
+            logger.exception(e.__str__())
+
+
 
 class SalesReport(View):
     def get(self,request,*args,**kwargs):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
-
-        # start_date = datetime.today()-timedelta(100)
-        # end_date = datetime.today()
-        # if not start_date and not end_date:
-        #     return HttpResponse("Invalid input",status=404)
-        # else:
-        #     start_date = datetime.fromtimestamp(start_date,tz=timezone.utc)
-        #     end_date = datetime.fromtimestamp(end_date,tz=timezone.utc)
 
         if not start_date or not end_date:
              return render(request, 'report.html',None)

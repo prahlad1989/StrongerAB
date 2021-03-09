@@ -662,7 +662,7 @@
            data: new FormData(form[0]),
            processData: false,
            contentType: false,
-           url: form.attr('action'),
+           url: form.attr('action')+"?timezoneOffset="+new Date().getTimezoneOffset(),
            method: form.attr('method'),
            success: function(response){
                var duplicates = response.duplicates;
