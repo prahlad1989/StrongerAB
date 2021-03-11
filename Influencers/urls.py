@@ -45,6 +45,8 @@ urlpatterns = [
     path('influe_field_preferences', views.UserPreferences.as_view(), name='influe_field_preferences'),
     path('reports', views.reportPage, name='reports'),
     path('sales_report',views.SalesReport.as_view(), name='sales_report'),
-    path('collabs_report',views.CollabsReport.as_view(), name='collabs_report')
+    path('collabs_report',views.CollabsReport.as_view(), name='collabs_report'),
+    path('collabs_report_by_manager',views.CollabsReportByManager.as_view(), name='collabs_report_by_manager'),
+    path('sales_report_by_manager',views.SalesReportByManager.as_view(), name='sales_report_by_manager')
 
 ]

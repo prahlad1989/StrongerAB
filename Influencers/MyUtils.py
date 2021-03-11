@@ -1,4 +1,5 @@
-sql_datetime_format = "%Y-%m-%d %H:%M:%S"
+sql_datetime_format = "%Y-%m-%d %H:%M:%S%z"
+
 javascript_iso_format = ""
 sql_date_format = "%Y-%m-%d"
 

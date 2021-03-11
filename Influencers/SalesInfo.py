@@ -9,6 +9,9 @@ class SalesInfo:
         self.__roas = 0
         self.__percent_total_sales = 0
         self.__influe_to_country_sales_ratio = 0
+        self.first_name=None
+        self.last_name=None
+        self.__full_name = None
 
     country = None
     country_sales = 0
@@ -20,6 +23,13 @@ class SalesInfo:
     percent_total_sales =0
     influe_to_country_sales_ratio=0
 
+
+    @property
+    def full_name(self):
+        if self.first_name and self.last_name:
+            return self.first_name+" "+self.last_name
+        else:
+            return ""
 
     @property
     def percent_total_sales(self):
@@ -102,6 +112,7 @@ class SalesInfo:
             newDict[key.replace("_SalesInfo__","")] = value
         newDict['roas'] = self.roas
         newDict['total_cost'] = self.total_cost
+        newDict['full_name'] = self.full_name
         return newDict
 
 

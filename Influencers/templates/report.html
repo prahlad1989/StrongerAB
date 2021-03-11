@@ -85,6 +85,7 @@
 <div class="content">
 <h2>Sales By Country</h2>
 
+
 <div id="sales_by_country">
 	<script>
 	    $(function(){
@@ -150,6 +151,58 @@
 	    	 }
 
 
+
+
+	    	 function updateSalesByManagerView(salesInfos){
+					document.getElementById("sales_by_manager_total").innerHTML='';
+					$("#sales_by_manager_grid").jsGrid(
+					{
+						height: "40%",
+						width: "100%",
+						sorting: true,
+
+						data: salesInfos,
+						fields: [
+							{ name: "full_name", title:"Name", type: "text", width: 150},
+							{ name: "voucher_sales", title:"Vocher Sales", type: "number", width: 100 },
+							{ name: "commission", title:"Commission",  type: "number", width: 100 },
+							{ name: "product_cost", title:"Product Cost", type: "number", width:100},
+							{ name:"total_cost", type: "number",title: "Total Cost", width:100},
+							{ name:"roas", type: "number", title:"ROAS", width:100, itemTemplate:round2Decimals(2) },
+
+						]
+					}
+					);
+
+				   salesInfosTotal = {
+				   	voucher_sales:0,
+				   	commission:0,
+				   	product_cost:0,
+				   	total_cost:0,
+				   	roas:0
+				   };
+				   salesInfos.forEach(function(x,i){
+				   		salesInfosTotal.voucher_sales +=x.voucher_sales;
+				   		salesInfosTotal.commission+=x.commission;
+				   		salesInfosTotal.product_cost += x.product_cost;
+				   		salesInfosTotal.total_cost += x.total_cost;
+				   		salesInfosTotal.roas += x.roas;
+
+				   });
+				   $("#sales_by_manager_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tbody>").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-header-row")
+				   .append($("<td>").text("Total").addClass("jsgrid-cell jsgrid-align-right").css("width", "150px"))
+				   .append($("<td>").text(salesInfosTotal.voucher_sales).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.commission).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.product_cost).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(salesInfosTotal.total_cost).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(Math.round(salesInfosTotal.roas*100)/100).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px")))));
+
+	    	 }
+
+
+
+
+
 	    	 function updateCollabsByCountriesView(collabsInfos){
 	    	 	document.getElementById("collabs_by_country_total").innerHTML='';
 					$("#collabs_by_country_grid").jsGrid(
@@ -173,7 +226,7 @@
 					}
 					);
 
-				   collabsInfosTotal = {
+				   var collabsInfosTotal = {
 				   	ok:0,
 				   	paid:0,
 				   	unpaid:0,
@@ -199,6 +252,50 @@
 
 
 
+	    	 function updateCollabsByManagerView(collabsInfos){
+	    	 	document.getElementById("collabs_by_manager_total").innerHTML='';
+					$("#collabs_by_manager_grid").jsGrid(
+					{
+						height: "40%",
+						width: "100%",
+						sorting: true,
+
+						data: collabsInfos,
+						fields: [
+							{ name: "manager", title:"Manager", type: "text", width: 150
+							 },
+							{ name: "paid", title:"Paid", type: "number", width: 100 },
+							{ name: "unpaid", title:"Unpaid",  type: "number", width: 100 },
+							{ name: "ok", title:"ÖK", type: "number", width:100},
+							{ name:"total", type: "number",title: "Total", width:100},
+
+						]
+					}
+					);
+
+				   var collabsInfosTotal = {
+				   	ok:0,
+				   	paid:0,
+				   	unpaid:0,
+				   	total:0,
+
+				   };
+				   collabsInfos.forEach(function(x,i){
+				   		collabsInfosTotal.ok +=x.ok;
+				   		collabsInfosTotal.paid+=x.unpaid;
+				   		collabsInfosTotal.unpaid += x.unpaid;
+				   		collabsInfosTotal.total += x.total;
+
+				   });
+				   $("#collabs_by_manager_total").addClass("jsgrid-grid-body").append($("<table>").addClass("jsgrid-table").append($("<tbody>").append($("<tr>").css("font-weight", "bold").addClass("jsgrid-header-row")
+				   .append($("<td>").text("Total").addClass("jsgrid-cell jsgrid-align-right").css("width", "150px"))
+				   .append($("<td>").text(collabsInfosTotal.paid).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.unpaid).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.ok).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   .append($("<td>").text(collabsInfosTotal.total).addClass("jsgrid-cell jsgrid-align-right").css("width", "100px"))
+				   )));
+
+	    	 }
 
 
 	    	 function handleReports(start_date,end_date){
@@ -240,6 +337,43 @@
                      }
 				});
 
+
+
+				url = "collabs_report_by_manager?start_date="+start_date+"&end_date="+end_date;
+				$.ajax({
+					method: 'GET',
+					url:url,
+					success:function(data){
+						collabsInfos = data.collabsInfos;
+						updateCollabsByManagerView(collabsInfos);
+					},
+					 error: function (response){
+                          if(response.responseJSON){
+                                alert(response.responseJSON.error+" "+response.statusText);
+                           }else{
+                            alert(response.statusText);
+                          }
+                     }
+				});
+
+
+				url = "sales_report_by_manager?start_date="+start_date+"&end_date="+end_date;
+				$.ajax({
+					method: 'GET',
+					url:url,
+					success:function(data){
+						salesInfos = data.salesInfos;
+						updateSalesByManagerView(salesInfos);
+					},
+					 error: function (response){
+                          if(response.responseJSON){
+                                alert(response.responseJSON.error+" "+response.statusText);
+                           }else{
+                            alert(response.statusText);
+                          }
+                     }
+				});
+
 	    	 }
 
 
@@ -262,7 +396,9 @@
 			 $input.daterangepicker({
                     change:function(e) {
                            var dateRange = $(this).daterangepicker("getRange");
-                           inputDatesChanged2(dateRange.start, dateRange.end);
+                           end = dateRange.end.getTime() + 86400*1000 -1000;
+                           end = new Date(end);
+                           inputDatesChanged2(dateRange.start, end);
 
                     },
                     datepickerOptions : {
@@ -274,8 +410,10 @@
 
                   });
 			   var now = new Date();
+			   var tomorrow = now.getTime() + 86400*1000-1000
+			   tomorrow = new Date(tomorrow);
 			   var firstOfMonth = new Date(now.getFullYear()+"/"+(now.getMonth()+1)+"/1");
-               $input.daterangepicker("setRange",{start:firstOfMonth, end:new Date()})
+               $input.daterangepicker("setRange",{start:firstOfMonth, end:now})
 
 
 	    });
@@ -291,7 +429,7 @@
 	<thead>
 		<tr>
 			<th>Country</th>
-			<th><a href="" title="Centra Sales by Vouchers" class="active">Centra Sales</a></th>
+			<th><a href="" title="Vocher Sales by Vouchers" class="active">Vocher Sales</a></th>
 			<th><a href="">Commissions</a></th>
 			<th><a href="">Product Cost</a></th>
 			<th><a href="">Total Cost</a></th>
@@ -399,21 +537,35 @@
 
 <ul>
 	<li>Country - Top voucher sales countries</li>
-	<li>Centra Sales - Total sales from voucher from a country to the left</li>
+	<li>Vocher Sales - Total sales from voucher from a country to the left</li>
 	<li>Commissions - Commission payed for the collaborations within given time for the specific country</li>
 	<li>Product Cost - Product cost column summerized for all collaborations from the specific country, during given timeperiod</li>
 	<li>Total Cost - Commissions + Product Cost</li>
-	<li>ROAS = Centra Sales - Total Cost</li>
-	<li>% of Total sales = Centra sales (per country) / all centra Sales (given timeperiod)</li>
+	<li>ROAS = Vocher Sales - Total Cost</li>
+	<li>% of Total sales = Vocher Sales (per country) / all Vocher Sales (given timeperiod)</li>
 	<li>Influencer sales/country sales</li>
 	<li>Country Total Sales = All sales from the specific country (during given timeperiod)</li>
-
 </ul>
 
-<h2>Number of Collaborations</h2>
+<h2>Number of Collaborations By Country</h2>
 	<div id = "collabs_by_country_div">
 	<div id="collabs_by_country_grid"></div>
 	<div id="collabs_by_country_total"></div>
+    </div>
+
+
+<h2>Number of Collaborations By Manager</h2>
+	<div id = "collabs_by_manager_div">
+	<div id="collabs_by_manager_grid"></div>
+	<div id="collabs_by_manager_total"></div>
+    </div>
+
+<br><br>
+
+<h2>Sales By Manager</h2>
+	<div id = "sales_by_manager_div">
+	<div id="sales_by_manager_grid"></div>
+	<div id="sales_by_manager_total"></div>
     </div>
 <table style="display:none;">
 	<thead>

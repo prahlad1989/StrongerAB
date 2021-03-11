@@ -38,13 +38,14 @@ from StrongerAB1.settings import b2b_mandatory_fields
 from StrongerAB1.settings import influencer_mandatory_fields
 import re
 
+from .MyUtils import sql_datetime_format
 from .SalesInfo import SalesInfo
 from .tasks import centraOrdersUpdate,centraToDBFun
 logger = logging.getLogger(__name__)
 
 
 
-sql_datetime_format = "%Y-%m-%d %H:%M:%S"
+#sql_datetime_format = "%Y-%m-%d %H:%M:%SZ"
 javascript_iso_format = ""
 sql_date_format = "%Y-%m-%d"
 class Index(TemplateView):
@@ -236,7 +237,7 @@ class CentraToDB(CentraBase):
     def get(self,request, *args, **kwargs):
         logger.info("updated DB with order info")
         self.deleteTasks("Influencers.tasks.centraToDBFun")
-        centraToDBFun(message="Centra to DB", repeat =60*60)
+        centraToDBFun(message="Centra to DB", repeat =2*60)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 
@@ -588,7 +589,6 @@ class InfluencersQuery(View):
                 elif k in ['created_by','updated_by']:
                     searchParams[k+"__username" + "__icontains"] = v
 
-
                 else:
                     searchParams[k  + "__icontains"] = v
             elif "_at" in k and v:
@@ -644,26 +644,29 @@ class InfluencersQuery(View):
 
 
 class CollabsReport(View):
-    def get(self, request, *args, **kwargs):
+    def setDates(self, request):
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
         if not start_date or not end_date:
             return render(request, 'report.html', None)
-        start_date = datetime.fromtimestamp(int(start_date), tz=timezone.utc)
-        end_date = datetime.fromtimestamp(int(end_date), tz=timezone.utc)
+        self.start_date = datetime.fromtimestamp(int(start_date), tz=timezone.utc)
+        self.end_date = datetime.fromtimestamp(int(end_date), tz=timezone.utc)
+
+    def get(self, request, *args, **kwargs):
+        self.setDates(request)
 
         try:
-            collabs = InfluencerModel.objects.filter(Q(date_of_promotion_at__gte = start_date) & Q(date_of_promotion_at__lte = end_date)).values('paid_or_unpaid','country')
+            collabs = InfluencerModel.objects.filter(Q(date_of_promotion_at__gte =self.start_date) & Q(date_of_promotion_at__lte =self.end_date)).values('paid_or_unpaid', 'country')
             collabsList = list()
             collabsByCountry = dict()
-            for c in collabs:
+            for _ in collabs:
                 collabsInfo = CollabsInfo()
-                country = c['country']
+                country = _['country']
                 if not country in collabsByCountry:
                     collabsByCountry[country ] = CollabsInfo()
                 if country in collabsByCountry:
                     collabsInfo = collabsByCountry[country]
-                    status = c['paid_or_unpaid']
+                    status = _['paid_or_unpaid']
                     if status == paid_unpaid_choices[1]:
                         collabsInfo.paid+=1
                     elif status == paid_unpaid_choices[2]:
@@ -681,22 +684,86 @@ class CollabsReport(View):
             logger.exception(e.__str__())
 
 
+class CollabsReportByManager(CollabsReport):
+    def get(self, request, *args, **kwargs):
+        self.setDates(request)
 
-class SalesReport(View):
+        try:
+            collabs = InfluencerModel.objects.filter(
+                Q(date_of_promotion_at__gte=self.start_date) & Q(date_of_promotion_at__lte=self.end_date)).values(
+                'paid_or_unpaid', 'managed_by__first_name',  'managed_by__last_name', 'managed_by__username')
+            collabsList = list()
+            collabsByManager = dict()
+            for c in collabs:
+                collabsInfo = CollabsInfo()
+                username = c['managed_by__username']
+                if not username in collabsByManager:
+                    collabsByManager[username] = CollabsInfo()
+                if username in collabsByManager:
+                    collabsInfo = collabsByManager[username]
+                    status = c['paid_or_unpaid']
+                    if status == paid_unpaid_choices[1]:
+                        collabsInfo.paid += 1
+                    elif status == paid_unpaid_choices[2]:
+                        collabsInfo.unpaid += 1
+                    elif status == paid_unpaid_choices[3]:
+                        collabsInfo.ok += 1
+                    collabsInfo.manager = c['managed_by__first_name']+" "+c['managed_by__last_name']
+
+            responseObj = dict()
+            responseObj['collabsInfos'] = list(map(lambda x: x.toProperDict(), collabsByManager.values()))
+
+            return JsonResponse(responseObj, status=200, safe=False)
+
+        except Exception as e:
+            logger.exception(e.__str__())
+
+
+
+class SalesReportByManager(CollabsReport):
+    def get(self, request, *args, **kwargs):
+
+        self.setDates(request)
+        cursor = connection.cursor()
+        try:
+            costs_query = "select u1.first_name,u1.last_name, u1.username, sum(i1.\"revenue_click\") as voucher_sales, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from public.\"Influencers_influencer\" i1 inner join public.auth_user u1 on i1.managed_by_id=u1.id  and i1.\"date_of_promotion_at\" >= \'{0}\' and i1.\"date_of_promotion_at\" <= \'{1}\' group by u1.username,u1.first_name,u1.last_name".format(self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format))
+            cursor.execute(costs_query)
+            salesInfos = list()
+            while True:
+                row = cursor.fetchone()
+                if row:
+                    salesInfo = SalesInfo()
+                    salesInfo.first_name = row[0]
+                    salesInfo.last_name = row[1]
+                    salesInfo.voucher_sales = row[3] if row[3] else 0
+                    salesInfo.product_cost = row[4] if row[4] else 0
+                    salesInfo.commission = row[5] if row[5] else 0
+                    salesInfos.append(salesInfo)
+
+                else:
+                    break
+            responseObj = dict()
+            responseObj['salesInfos'] = list(map(lambda x: x.toProperDict(), salesInfos))
+            return JsonResponse(responseObj, status=200, safe=False)
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
+
+
+class SalesReport(CollabsReport):
     def get(self,request,*args,**kwargs):
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
 
-        if not start_date or not end_date:
-             return render(request, 'report.html',None)
-        start_date = datetime.fromtimestamp(int(start_date), tz=timezone.utc)
-        end_date = datetime.fromtimestamp(int(end_date), tz= timezone.utc)
+        self.setDates(request)
         #influe_vouchers = InfluencerModel.objects.values(InfluencerModel.discount_coupon.field_name).distinct()
         country_sales_vouchers_dict= dict() # to use just for quick look up of grandtotal of countries
         rows = []
         cursor = connection.cursor()
         try:
-            query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
+            #query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' and i1.\"date_of_promotion_at\" >= '{2}' and i1.\"date_of_promotion_at\" <= '{3}' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format),self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format))
+            query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' and i1.\"date_of_promotion_at\" >= '{2}' and i1.\"date_of_promotion_at\" <= '{3}' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(
+                self.start_date.strftime(sql_datetime_format), self.end_date.strftime(sql_datetime_format),
+                self.start_date.strftime(sql_datetime_format), self.end_date.strftime(sql_datetime_format))
             cursor.execute(query)
             while True:
                 row = cursor.fetchone()
@@ -709,7 +776,7 @@ class SalesReport(View):
 
         cursor = connection.cursor()
         try:
-            costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_at >= \'{0}\' and date_of_promotion_at <= \'{1}\' group by i1.country".format(start_date.strftime(sql_date_format),end_date.strftime(sql_date_format))
+            costs_query = "select i1.country, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from  public.\"Influencers_influencer\" i1 where date_of_promotion_at >= \'{0}\' and date_of_promotion_at <= \'{1}\' group by i1.country".format(self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format))
             cursor.execute(costs_query)
             while True:
                 row = cursor.fetchone()
@@ -740,7 +807,7 @@ class SalesReport(View):
         finally:
             cursor.close()
 
-        orders = OrderInfo.objects.filter(Q(orderDate__gte=start_date) & Q(orderDate__lte=end_date))
+        orders = OrderInfo.objects.filter(Q(orderDate__gte=self.start_date) & Q(orderDate__lte=self.end_date))
         country_field_name = InfluencerModel.country.field_name
         # entire sales country wise , in the specified time period.
         # this is obtained from orderinfo, i.e from centra sync details
@@ -782,6 +849,61 @@ class SalesReport(View):
         responseObj['salesInfos'] = list(map(lambda x:x.toProperDict(), rows))
         return JsonResponse(responseObj, status=200, safe=False)
 
+class SalesReport(SalesReportByManager):
+    def get(self, request, *args, **kwargs):
 
+        self.setDates(request)
+        cursor = connection.cursor()
+        try:
+            country_to_sales_dict = dict()
+            costs_query = "select i1.country, sum(i1.\"revenue_click\") as voucher_sales, sum(i1.product_cost) as  product_cost, sum(i1.commission) as commission from public.\"Influencers_influencer\" i1  where i1.\"date_of_promotion_at\" >= \'{0}\' and i1.\"date_of_promotion_at\" <= \'{1}\' group by i1.country".format(self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format))
+            cursor.execute(costs_query)
+            salesInfos = list()
+            while True:
+                row = cursor.fetchone()
+                if row:
+                    salesInfo = SalesInfo()
+                    salesInfo.country= country = row[0]
+                    country_to_sales_dict[country] = salesInfo
+                    salesInfo.last_name = row[1]
+                    salesInfo.voucher_sales = row[1]
+                    salesInfo.product_cost = row[2]
+                    salesInfo.commission = row[3]
+                    salesInfos.append(salesInfo)
 
+                else:
+                    break
+
+            orders = OrderInfo.objects.filter(Q(orderDate__gte=self.start_date) & Q(orderDate__lte=self.end_date))
+            country_field_name = InfluencerModel.country.field_name
+            # entire sales country wise , in the specified time period.
+            # this is obtained from orderinfo, i.e from centra sync details
+            country_sales = orders.values(country_field_name).annotate(sales=Sum('grandTotal'))
+
+            for _ in country_sales:
+                _country_name = _[country_field_name]
+                _sales = _['sales']
+                if _country_name in country_to_sales_dict:
+                    salesInfo = country_to_sales_dict[_country_name]
+                    salesInfo.country_sales = _sales
+
+            total_voucher_sales = 0
+            total_voucher_sales = reduce(lambda x, y: x + y.country_sales, salesInfos, total_voucher_sales)
+
+            for salesInfo in salesInfos:
+                if salesInfo.country_sales > 0:
+                    salesInfo.influe_to_country_sales_ratio = (salesInfo.voucher_sales / salesInfo.country_sales) * 100
+                    salesInfo.influe_to_country_sales_ratio = round(salesInfo.influe_to_country_sales_ratio, 2)
+                # salesInfo.roas = salesInfo.voucher_sales/salesInfo.total_cost
+                if total_voucher_sales > 0:
+                    percent_total_sales = (salesInfo.voucher_sales / total_voucher_sales) * 100
+                    salesInfo.percent_total_sales = round(percent_total_sales, 2)  # remove last 2 decimals
+            responseObj = dict()
+            responseObj['salesInfos'] = list(map(lambda x: x.toProperDict(), salesInfos))
+            return JsonResponse(responseObj, status=200, safe=False)
+
+        except Exception as e:
+            logger.exception(e.__str__())
+        finally:
+            cursor.close()
 

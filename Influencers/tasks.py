@@ -13,7 +13,7 @@ from jsonpath_ng import parse
 from python_graphql_client import GraphqlClient
 
 from Influencers.models import Influencer as Influencer, Constants, OrderInfo
-from Influencers.MyUtils import sql_date_format
+from Influencers.MyUtils import sql_date_format, sql_datetime_format
 from StrongerAB1.settings import centra_api_start_date, centra_api_revenue_click_start
 from StrongerAB1.settings import centra_key, centra_api_url
 logger = getLogger(__name__)
@@ -121,12 +121,10 @@ class CentraToDB(OrdersUpdate2):
         while True:
             try:
                 resp = client.execute(query=graphQlQuery, variables=api_query_params)
-                time.sleep(1)
+                time.sleep(0)
                 orders = resp['data']['orders']
                 logger.debug("orders  length {0}".format(len(orders)))
                 for order in orders:
-                    if(not order["discountsApplied"]):
-                        continue
                     orderInfo = OrderInfo()
                     orderInfo.number = order['number']
                     logger.debug("order details  {0}".format(order))
@@ -135,14 +133,16 @@ class CentraToDB(OrdersUpdate2):
                     # else:
                     #     totalOdersDict[orderInfo.number] = [api_query_params["orderStartDate"] ,api_query_params["orderEndDate"], api_query_params['pageNumber']]
                     orderInfo.orderDate = order['orderDate']
-                    expr = parse('$.discountsApplied[*].discount.code')
-                    values = expr.find(order)
-                    values = list(map(lambda x: x.value, values))
-                    logger.debug("discount coupons {0} ".format(values))
-                    if not values[0]:
-                        logger.debug("has no discounts")
-                        continue
-                    orderInfo.discount_coupons = values[0]
+                    if (order["discountsApplied"]):
+                        expr = parse('$.discountsApplied[*].discount.code')
+                        values = expr.find(order)
+                        values = list(map(lambda x: x.value, values))
+                        logger.debug("discount coupons {0} ".format(values))
+                        if not values[0]:
+                            logger.debug("has no discounts")
+
+                        else:
+                            orderInfo.discount_coupons = values[0]
                     orderInfo.status = order["status"]
                     orderInfo.grandTotal = round(order["grandTotal"]["value"]*order["currencyBaseRate"])
                     orderInfoList.append(orderInfo)
@@ -171,9 +171,9 @@ class CentraToDB(OrdersUpdate2):
         else:
             logger.debug("not processed previously")
             last_sync_at = datetime.strptime( centra_api_start_date,"%Y-%m-%d").astimezone(timezone.utc)
-        now = datetime.now().astimezone()
+        now = datetime.now().astimezone(timezone.utc)
         delta = (now-last_sync_at).total_seconds()
-        num_of_threads = 10
+        num_of_threads = 1
         temp_delta = int(delta/num_of_threads) # for each call,
         totalOrdersDict = dict()
         start_and_end_dates = [(last_sync_at+timedelta(seconds=1+ i*temp_delta), last_sync_at+timedelta(seconds=(i+1)*temp_delta)) for i in range(num_of_threads)]
@@ -193,11 +193,9 @@ class CentraToDB(OrdersUpdate2):
             c.save()
         logger.info("time taken for total orders sync {0}".format(int(time.time()-tic)))
 
-
         logger.info("now started updating influencers revenue click")
         cursor = connection.cursor()
-
-        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{0}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{1}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start)
+        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"='{2}', revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{0}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{1}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start,now.strftime(sql_datetime_format))
 
         try:
             cursor.execute(query)
@@ -206,7 +204,6 @@ class CentraToDB(OrdersUpdate2):
         finally:
             cursor.close()
         logger.info("update revenue click complete")
-
 
 
 class CentraToDBAllOrders(CentraToDB):
@@ -226,7 +223,7 @@ class CentraToDBAllOrders(CentraToDB):
         while True:
             try:
                 resp = client.execute(query=graphQlQuery, variables=api_query_params)
-                time.sleep(1)
+                time.sleep(0)
                 orders = resp['data']['orders']
                 logger.debug("orders  length {0}".format(len(orders)))
                 for order in orders:
@@ -263,9 +260,7 @@ class CentraToDBAllOrders(CentraToDB):
                 raise e
 
 
-
-
-@background(schedule=10*60)
+@background(schedule=1*60)
 def centraToDBFun(message):
     logger.info('initiated db from centra update')
 
@@ -331,11 +326,10 @@ class CouponValidationUpdate(CentraUpdate):
         logger.info("time taken for total coupon updates {0}".format((int(time.time() - tic))))
 
 
-@background(schedule=2*60)
+@background(schedule=5*60)
 def valiationsUpdate(message):
     logger.info('initiated coupon validations thread')
     couponValidationUpdate  = CouponValidationUpdate()
-
     try:
         logger.info("coupon validations started at {0}".format(datetime.utcnow()))
         couponValidationUpdate.update()
