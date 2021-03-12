@@ -237,7 +237,7 @@ class CentraToDB(CentraBase):
     def get(self,request, *args, **kwargs):
         logger.info("updated DB with order info")
         self.deleteTasks("Influencers.tasks.centraToDBFun")
-        centraToDBFun(message="Centra to DB", repeat =2*60)
+        centraToDBFun(message="Centra to DB", repeat =5*60)
         return JsonResponse({"will be updated in an hour":True},status=200)
 
 
@@ -246,7 +246,7 @@ class ValidationUpdatesView(CentraToDB):
     def get(self,request, *args,**kwargs):
         logger.info("updating influencers with discount coupon related info{0}".format(datetime.now()))
         self.deleteTasks("Influencers.tasks.valiationsUpdate")
-        valiationsUpdate(message="Centra coupon validations update", repeat =5*60)
+        valiationsUpdate(message="Centra coupon validations update", repeat =10*60)
         return JsonResponse({"coupon codes be updated in an hour":True},status=200)
 
 class InfluencerView(BaseView):
@@ -761,7 +761,7 @@ class SalesReport(CollabsReport):
         cursor = connection.cursor()
         try:
             #query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' and i1.\"date_of_promotion_at\" >= '{2}' and i1.\"date_of_promotion_at\" <= '{3}' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format),self.start_date.strftime(sql_datetime_format),self.end_date.strftime(sql_datetime_format))
-            query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on i1.discount_coupon=o1.discount_coupons and i1.country=o1.country  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' and i1.\"date_of_promotion_at\" >= '{2}' and i1.\"date_of_promotion_at\" <= '{3}' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(
+            query = "select o1.country, sum(o1.\"grandTotal\") as voucher_sales from public.\"Influencers_influencer\" i1 inner join public.\"Influencers_orderinfo\" o1 on lower(i1.discount_coupon)=lower(o1.discount_coupons) and i1.country=o1.country  and o1.\"orderDate\" >= \'{0}\' and o1.\"orderDate\" <= \'{1}\' and i1.\"date_of_promotion_at\" >= '{2}' and i1.\"date_of_promotion_at\" <= '{3}' group by o1.country having sum(o1.\"grandTotal\") >0 ".format(
                 self.start_date.strftime(sql_datetime_format), self.end_date.strftime(sql_datetime_format),
                 self.start_date.strftime(sql_datetime_format), self.end_date.strftime(sql_datetime_format))
             cursor.execute(query)
@@ -867,7 +867,7 @@ class SalesReport(SalesReportByManager):
                     country_to_sales_dict[country] = salesInfo
                     salesInfo.last_name = row[1]
                     salesInfo.voucher_sales = row[1]
-                    salesInfo.product_cost = row[2]
+                    salesInfo.product_repeatcost = row[2]
                     salesInfo.commission = row[3]
                     salesInfos.append(salesInfo)
 

@@ -81,7 +81,7 @@ class OrdersUpdate2(OrdersUpdate):
     def update(self):
         cursor = connection.cursor()
         try:
-            cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
+            cursor.execute("update public.\"Influencers_influencer\" as inf set \"centra_update_at\"=now(), revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where lower(discount_coupons) = lower(inf.discount_coupon) and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" ) is not NULL")
 
         except Exception as e:
             logger.exception(e.__str__())
@@ -195,7 +195,7 @@ class CentraToDB(OrdersUpdate2):
 
         logger.info("now started updating influencers revenue click")
         cursor = connection.cursor()
-        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"='{2}', revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{0}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{1}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start,now.strftime(sql_datetime_format))
+        query = "update public.\"Influencers_influencer\" as inf set \"centra_update_at\"='{2}', revenue_click =(select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where lower(discount_coupons) = lower(inf.discount_coupon) and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{0}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till ) where (select sum(\"grandTotal\") from public.\"Influencers_orderinfo\" where discount_coupons = inf.discount_coupon and status in ('CONFIRMED', 'PARTIAL', 'SHIPPED', 'PENDING') and inf.valid_from <= \"orderDate\" and inf.valid_till >= \"orderDate\" and inf.date_of_promotion_at > \'{1}\' and inf.date_of_promotion_at >= inf.valid_from and date_of_promotion_at <= inf.valid_till) is not NULL".format(centra_api_revenue_click_start, centra_api_revenue_click_start,now.strftime(sql_datetime_format))
 
         try:
             cursor.execute(query)
@@ -291,7 +291,7 @@ class CouponValidationUpdate(CentraUpdate):
 
         influencersList = Influencer.objects.filter(Q(date_of_promotion_at__gt = datetime.strptime(centra_api_revenue_click_start, sql_date_format)) &
             ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
-            Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False))
+        Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False) )
         logger.info("influencersList length {0} ".format(len(influencersList)))
         graphQlQuery = self.graphQlQuery
         client = self.client
@@ -310,7 +310,7 @@ class CouponValidationUpdate(CentraUpdate):
                     stopAt = datetime.strptime(coupon_from_api['stopAt'], self.timeFormat).astimezone(
                         timezone.utc)
 
-                    if coupon_from_api['code'] ==  discount_coupon and date_of_promotion_at >= startAt and date_of_promotion_at <= stopAt:
+                    if coupon_from_api['code'].lower() ==  discount_coupon.lower() and date_of_promotion_at >= startAt and date_of_promotion_at <= stopAt:
                         logger.debug("coupon details are {0}".format(coupon_from_api))
                         eachObj.valid_from = startAt
                         eachObj.valid_till = stopAt

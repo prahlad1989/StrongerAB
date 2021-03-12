@@ -36,7 +36,6 @@
             border-radius: 0px !important;
         }
 
-
    </style>
 
    <body id="default_theme" class="home_page1" >
@@ -133,7 +132,7 @@
                    <span aria-hidden="true">&times;</span>
                  </button>
                </div>
-               <div class="modal-body" id="myModal_body">
+               <div class="modal-body " id="myModal_body" style="overflow-y:scroll important!;">
                </div>
 <!--               <div class="modal-footer">-->
 <!--                 <button type="button" class="btn btn-primary">Save changes</button>-->
@@ -202,6 +201,7 @@
                 $("table").each(function(){$(this).stickyTableHeaders();});
                 $("button[name='configureColumns']").on('click', function(e){
                     $("#myModal").css("display","block");
+                    $("#myModal_body").css({"overflow-y":"scroll ", "height":"550px"});
                 });
                 $("button.close").on('click',function(e){
                     $("#myModal").css("display","none");
@@ -261,6 +261,7 @@
                     width: "70%",
                     autoload: true,
                     confirmDeleting: false,
+
                     controller: {
                         loadData: function() {
                             return db;
@@ -296,6 +297,8 @@
 
                     ]
                 });
+
+                $("#myModal_body").css({"overflow-y":"scroll ", "height":"500px"});
 
             });
 
