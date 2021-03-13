@@ -195,5 +195,5 @@ is_influencer_choices = ["", "Prospect", "Influencer",'PR_','Affiliate']
 is_answered_choices = ["","Yes", "No"]
 centra_key = "2de0107b9b16e994f1894e514f031a21"
 centra_api_url = "https://stronger.centra.com/graphql"
-centra_api_start_date = "2020-10-01"
+centra_api_start_date = "2021-02-28"
 centra_api_revenue_click_start = "2021-02-28"

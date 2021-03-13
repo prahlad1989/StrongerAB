@@ -291,7 +291,7 @@ class CouponValidationUpdate(CentraUpdate):
 
         influencersList = Influencer.objects.filter(Q(date_of_promotion_at__gt = datetime.strptime(centra_api_revenue_click_start, sql_date_format)) &
             ~Q(discount_coupon__regex=r'^(\s)*$') & ~Q(discount_coupon=None) &
-        Q(valid_from=None) & Q(valid_till=None) & Q(is_old_record=False) )
+    Q(valid_from=None) & Q(valid_till=None)  )
         logger.info("influencersList length {0} ".format(len(influencersList)))
         graphQlQuery = self.graphQlQuery
         client = self.client

@@ -4,3 +4,7 @@ projectName=myproject
 user=postgres
 cd $backupDir
 exec pg_dump $projectName -U $user -f $(date -I)
+
+dummy
+ sudo -i -u postgres psql -d prodcopy3 -f /tmp/influ1_dump_jan24.sql
+
